@@ -1,26 +1,44 @@
+import 'dart:async';
 import 'dart:html';
 
-import 'package:web_drawing/layer.dart';
+import 'package:web_drawing/layers/drawing_layer.dart';
+import 'package:web_drawing/layers/layer.dart';
 
 class DrawingCanvas {
-  final CanvasElement canvas;
+  final HtmlElement parent;
   final _layers = <Layer>[];
-  int layerIndex;
+  int layerIndex = 0;
 
   Layer get layer => _layers[layerIndex];
 
-  DrawingCanvas(this.canvas) {
+  DrawingCanvas(this.parent) {
     _initControls();
+    _addLayer(DrawingLayer(this));
+  }
+
+  void _addLayer(Layer layer) {
+    _layers.add(layer);
   }
 
   void _initControls() {
-    var mouseDown = false;
-    canvas
+    StreamController<MouseEvent> moveStreamController;
+    var mouseButton = -1;
+
+    parent
       ..onMouseDown.listen((ev) async {
-        mouseDown = true;
+        mouseButton = ev.button;
+        moveStreamController = StreamController();
+        layer.onMouseDown(ev, moveStreamController.stream);
+
         await window.onMouseUp.first;
-        mouseDown = false;
+
+        mouseButton = -1;
+        await moveStreamController.close();
       })
-      ..onMouseMove.listen((ev) {});
+      ..onMouseMove.listen((ev) {
+        if (mouseButton == 0) {
+          moveStreamController.add(ev);
+        }
+      });
   }
 }

@@ -1,5 +1,7 @@
 import 'dart:html';
 
+import 'package:web_drawing/web_drawing.dart';
+
 void main() {
-  querySelector('#output').text = 'Your Dart app is running.';
+  DrawingCanvas(querySelector('#canvas'));
 }
