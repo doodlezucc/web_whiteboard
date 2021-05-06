@@ -8,6 +8,7 @@ class DrawingCanvas {
   final HtmlElement container;
   final _layers = <Layer>[];
   int layerIndex = 0;
+  bool eraser = false;
 
   Layer get layer => _layers[layerIndex];
 
@@ -23,40 +24,36 @@ class DrawingCanvas {
   void _initControls() {
     StreamController<Point> moveStreamCtrl;
 
-    Point touchToPoint(TouchEvent ev) {
-      return ev.targetTouches[0].page - container.documentOffset;
+    void listenToCursorEvents<T extends Event>(
+      Point Function(T ev) evToPoint,
+      Stream<T> startEvent,
+      Stream<T> moveEvent,
+      Stream<T> endEvent,
+    ) {
+      startEvent.listen((ev) async {
+        ev.preventDefault();
+        moveStreamCtrl = StreamController();
+        layer.onMouseDown(evToPoint(ev), moveStreamCtrl.stream);
+
+        await endEvent.first;
+        await moveStreamCtrl.close();
+        moveStreamCtrl = null;
+      });
+
+      moveEvent.listen((ev) {
+        if (moveStreamCtrl != null) {
+          moveStreamCtrl.add(evToPoint(ev));
+        }
+      });
     }
 
-    container
-      ..onMouseDown.listen((ev) async {
-        moveStreamCtrl = StreamController();
-        layer.onMouseDown(ev.offset, moveStreamCtrl.stream);
+    listenToCursorEvents<MouseEvent>((ev) => ev.page - container.documentOffset,
+        container.onMouseDown, window.onMouseMove, window.onMouseUp);
 
-        await window.onMouseUp.first;
-        await moveStreamCtrl.close();
-        moveStreamCtrl = null;
-      })
-      ..onTouchStart.listen((ev) async {
-        ev.preventDefault();
-        moveStreamCtrl = StreamController();
-        layer.onMouseDown(touchToPoint(ev), moveStreamCtrl.stream);
-
-        await window.onTouchEnd.first;
-        await moveStreamCtrl.close();
-        moveStreamCtrl = null;
-      });
-
-    window
-      ..onMouseMove.listen((ev) {
-        if (moveStreamCtrl != null) {
-          moveStreamCtrl.add(ev.page - container.documentOffset);
-        }
-      })
-      ..onTouchMove.listen((ev) {
-        ev.preventDefault();
-        if (moveStreamCtrl != null) {
-          moveStreamCtrl.add(touchToPoint(ev));
-        }
-      });
+    listenToCursorEvents<TouchEvent>(
+        (ev) => ev.targetTouches[0].page - container.documentOffset,
+        container.onTouchStart,
+        window.onTouchMove,
+        window.onTouchEnd);
   }
 }

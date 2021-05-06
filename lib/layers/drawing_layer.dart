@@ -13,7 +13,10 @@ class DrawingLayer extends Layer {
 
   @override
   void onMouseDown(Point first, Stream<Point> stream) {
-    print('down');
+    _handleDrawStream(first, stream);
+  }
+
+  void _handleDrawStream(Point first, Stream<Point> stream) {
     var pathEl = svg.PathElement();
     el.append(pathEl);
 
@@ -27,7 +30,7 @@ class DrawingLayer extends Layer {
     path.applyTo(pathEl);
 
     var lastDraw = first;
-    const minDistanceSquared = 9;
+    const minDistanceSquared = 12;
 
     stream.listen((p) {
       if (p.squaredDistanceTo(lastDraw) > minDistanceSquared) {
@@ -35,6 +38,6 @@ class DrawingLayer extends Layer {
         path.applyTo(pathEl);
         lastDraw = p;
       }
-    }, onDone: () => print('up'));
+    });
   }
 }
