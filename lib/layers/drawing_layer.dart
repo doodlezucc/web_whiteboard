@@ -12,26 +12,28 @@ class DrawingLayer extends Layer {
   void onClick(MouseEvent ev) {}
 
   @override
-  void onMouseDown(MouseEvent first, Stream<MouseEvent> stream) {
+  void onMouseDown(Point first, Stream<Point> stream) {
     print('down');
     var pathEl = svg.PathElement();
     el.append(pathEl);
 
     var path = SvgPath(
-      points: [first.offset],
+      points: [first],
       stroke: '#000000',
       fill: 'transparent',
       strokeWidth: '5px',
     );
 
-    var lastDraw = first.offset;
+    path.applyTo(pathEl);
+
+    var lastDraw = first;
     const minDistanceSquared = 9;
 
-    stream.listen((event) {
-      if (event.offset.squaredDistanceTo(lastDraw) > minDistanceSquared) {
-        path.add(event.offset);
+    stream.listen((p) {
+      if (p.squaredDistanceTo(lastDraw) > minDistanceSquared) {
+        path.add(p);
         path.applyTo(pathEl);
-        lastDraw = event.offset;
+        lastDraw = p;
       }
     }, onDone: () => print('up'));
   }

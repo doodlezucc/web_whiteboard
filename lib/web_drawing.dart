@@ -5,13 +5,13 @@ import 'package:web_drawing/layers/drawing_layer.dart';
 import 'package:web_drawing/layers/layer.dart';
 
 class DrawingCanvas {
-  final HtmlElement parent;
+  final HtmlElement container;
   final _layers = <Layer>[];
   int layerIndex = 0;
 
   Layer get layer => _layers[layerIndex];
 
-  DrawingCanvas(this.parent) {
+  DrawingCanvas(this.container) {
     _initControls();
     _addLayer(DrawingLayer(this));
   }
@@ -21,23 +21,41 @@ class DrawingCanvas {
   }
 
   void _initControls() {
-    StreamController<MouseEvent> moveStreamController;
-    var mouseButton = -1;
+    StreamController<Point> moveStreamCtrl;
 
-    parent
+    Point touchToPoint(TouchEvent ev) {
+      return ev.targetTouches[0].page - container.documentOffset;
+    }
+
+    container
       ..onMouseDown.listen((ev) async {
-        mouseButton = ev.button;
-        moveStreamController = StreamController();
-        layer.onMouseDown(ev, moveStreamController.stream);
+        moveStreamCtrl = StreamController();
+        layer.onMouseDown(ev.offset, moveStreamCtrl.stream);
 
         await window.onMouseUp.first;
-
-        mouseButton = -1;
-        await moveStreamController.close();
+        await moveStreamCtrl.close();
+        moveStreamCtrl = null;
       })
+      ..onTouchStart.listen((ev) async {
+        ev.preventDefault();
+        moveStreamCtrl = StreamController();
+        layer.onMouseDown(touchToPoint(ev), moveStreamCtrl.stream);
+
+        await window.onTouchEnd.first;
+        await moveStreamCtrl.close();
+        moveStreamCtrl = null;
+      });
+
+    window
       ..onMouseMove.listen((ev) {
-        if (mouseButton == 0) {
-          moveStreamController.add(ev);
+        if (moveStreamCtrl != null) {
+          moveStreamCtrl.add(ev.page - container.documentOffset);
+        }
+      })
+      ..onTouchMove.listen((ev) {
+        ev.preventDefault();
+        if (moveStreamCtrl != null) {
+          moveStreamCtrl.add(touchToPoint(ev));
         }
       });
   }

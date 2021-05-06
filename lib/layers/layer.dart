@@ -1,19 +1,19 @@
 import 'dart:html';
-import 'dart:svg';
+import 'dart:svg' as svg;
 
 import 'package:web_drawing/web_drawing.dart';
 
 abstract class Layer {
   final DrawingCanvas canvas;
-  final SvgSvgElement el;
+  final svg.SvgSvgElement el;
   bool visible = true;
 
-  Layer(this.canvas) : el = SvgSvgElement() {
+  Layer(this.canvas) : el = svg.SvgSvgElement() {
     el.width.baseVal.valueAsString = '100%';
     el.height.baseVal.valueAsString = '100%';
-    canvas.parent.append(el);
+    canvas.container.append(el);
   }
 
   void onClick(MouseEvent ev);
-  void onMouseDown(MouseEvent first, Stream<MouseEvent> moveStream);
+  void onMouseDown(Point first, Stream<Point> moveStream);
 }

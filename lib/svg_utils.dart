@@ -28,7 +28,7 @@ class SvgPath {
 
     var s = 'M' + writePoint(points.first);
 
-    for (var p in points.sublist(1)) {
+    for (var p in points) {
       s += ' L' + writePoint(p);
     }
 
