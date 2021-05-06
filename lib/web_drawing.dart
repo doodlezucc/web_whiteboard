@@ -8,7 +8,7 @@ import 'package:web_drawing/layers/text_layer.dart';
 
 class DrawingCanvas {
   final HtmlElement container;
-  final InputElement textInput;
+  final TextAreaElement textInput;
   final _layers = <Layer>[];
 
   int _layerIndex = 0;
@@ -26,8 +26,8 @@ class DrawingCanvas {
 
   Layer get layer => _layers[layerIndex];
 
-  DrawingCanvas(this.container, [InputElement text])
-      : textInput = text ?? InputElement() {
+  DrawingCanvas(this.container, [TextAreaElement text])
+      : textInput = text ?? TextAreaElement() {
     _initDom();
     _initTextInput();
     _initCursorControls();
@@ -70,9 +70,11 @@ class DrawingCanvas {
     });
   }
 
+  static bool isInput(Element e) => e is InputElement || e is TextAreaElement;
+
   void _initKeyListener() {
     window.onKeyDown.listen((ev) {
-      if (useShortcuts && ev.target is! InputElement) {
+      if (useShortcuts && !isInput(ev.target)) {
         switch (ev.key) {
           case 'e':
             eraser = !eraser;
@@ -108,7 +110,7 @@ class DrawingCanvas {
       Stream<T> endEvent,
     ) {
       startEvent.listen((ev) async {
-        if (ev.target is InputElement) return;
+        if (isInput(ev.target)) return;
 
         ev.preventDefault();
         document.activeElement.blur();
