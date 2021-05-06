@@ -14,22 +14,38 @@ class DrawingCanvas {
   Layer get layer => _layers[layerIndex];
 
   DrawingCanvas(this.container) {
+    _initDom();
     _initCursorControls();
     _initShortcuts();
     _addLayer(DrawingLayer(this));
   }
 
-  void _addLayer(Layer layer) {
+  DrawingLayer addDrawingLayer() {
+    return _addLayer(DrawingLayer(this));
+  }
+
+  L _addLayer<L extends Layer>(L layer) {
     _layers.add(layer);
+    layerIndex = _layers.length - 1;
+    return layer;
+  }
+
+  void _initDom() {
+    if (container.style.position.isEmpty) {
+      container.style.position = 'relative';
+    }
   }
 
   void _initShortcuts() {
     window.onKeyDown.listen((ev) {
-      if (useShortcuts) {
-        switch (ev.keyCode) {
-          case 69: // E
+      if (useShortcuts && ev.target is! InputElement) {
+        switch (ev.key) {
+          case 'e':
             eraser = !eraser;
             return print('Eraser: $eraser');
+          case 'D':
+            addDrawingLayer();
+            return print('Added drawing layer');
         }
       }
     });

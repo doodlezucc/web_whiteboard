@@ -11,6 +11,7 @@ abstract class Layer {
   Layer(this.canvas) : el = svg.SvgSvgElement() {
     el.width.baseVal.valueAsString = '100%';
     el.height.baseVal.valueAsString = '100%';
+    el.style.position = 'absolute';
     canvas.container.append(el);
   }
 
