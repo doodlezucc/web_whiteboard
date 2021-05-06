@@ -13,7 +13,11 @@ class DrawingLayer extends Layer {
 
   @override
   void onMouseDown(Point first, Stream<Point> stream) {
-    _handleDrawStream(first, stream);
+    if (canvas.eraser) {
+      _handleEraseStream(first, stream);
+    } else {
+      _handleDrawStream(first, stream);
+    }
   }
 
   void _handleDrawStream(Point first, Stream<Point> stream) {
@@ -39,5 +43,31 @@ class DrawingLayer extends Layer {
         lastDraw = p;
       }
     });
+  }
+
+  void _handleEraseStream(Point first, Stream<Point> stream) {
+    var paths = List.from(el.children);
+
+    void eraseAt(Point p) {
+      var svgPoint = el.createSvgPoint()
+        ..x = p.x
+        ..y = p.y;
+      var changed = false;
+
+      for (svg.PathElement path in paths) {
+        if (path.isPointInStroke(svgPoint)) {
+          path.remove();
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        paths = List.from(el.children);
+      }
+    }
+
+    eraseAt(first);
+
+    stream.listen(eraseAt);
   }
 }

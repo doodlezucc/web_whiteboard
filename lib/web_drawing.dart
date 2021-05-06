@@ -9,11 +9,13 @@ class DrawingCanvas {
   final _layers = <Layer>[];
   int layerIndex = 0;
   bool eraser = false;
+  bool useShortcuts = true;
 
   Layer get layer => _layers[layerIndex];
 
   DrawingCanvas(this.container) {
-    _initControls();
+    _initCursorControls();
+    _initShortcuts();
     _addLayer(DrawingLayer(this));
   }
 
@@ -21,7 +23,19 @@ class DrawingCanvas {
     _layers.add(layer);
   }
 
-  void _initControls() {
+  void _initShortcuts() {
+    window.onKeyDown.listen((ev) {
+      if (useShortcuts) {
+        switch (ev.keyCode) {
+          case 69: // E
+            eraser = !eraser;
+            return print('Eraser: $eraser');
+        }
+      }
+    });
+  }
+
+  void _initCursorControls() {
     StreamController<Point> moveStreamCtrl;
 
     void listenToCursorEvents<T extends Event>(
