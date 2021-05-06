@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:html';
+import 'dart:math';
 
 import 'package:web_drawing/layers/drawing_layer.dart';
 import 'package:web_drawing/layers/layer.dart';
@@ -43,9 +44,18 @@ class DrawingCanvas {
           case 'e':
             eraser = !eraser;
             return print('Eraser: $eraser');
+
           case 'D':
             addDrawingLayer();
             return print('Added drawing layer');
+
+          case 'ArrowUp':
+            layerIndex = min(_layers.length - 1, layerIndex + 1);
+            return print('Layer: $layerIndex');
+
+          case 'ArrowDown':
+            layerIndex = max(0, layerIndex - 1);
+            return print('Layer: $layerIndex');
         }
       }
     });
