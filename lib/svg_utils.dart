@@ -6,8 +6,16 @@ class SvgPath {
   List<Point> points = [];
   String fill;
   String stroke;
+  String strokeWidth;
+  String strokeCap;
 
-  SvgPath({this.points, this.fill, this.stroke});
+  SvgPath({
+    this.points,
+    this.fill,
+    this.stroke,
+    this.strokeWidth = '1px',
+    this.strokeCap = 'round',
+  });
 
   void add(Point p) => points.add(p);
 
@@ -31,5 +39,7 @@ class SvgPath {
     element.setAttribute('d', toData());
     element.setAttribute('stroke', stroke);
     element.setAttribute('fill', fill);
+    element.setAttribute('stroke-width', strokeWidth);
+    element.setAttribute('stroke-linecap', strokeCap);
   }
 }

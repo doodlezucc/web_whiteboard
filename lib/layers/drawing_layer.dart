@@ -21,12 +21,18 @@ class DrawingLayer extends Layer {
       points: [first.offset],
       stroke: '#000000',
       fill: 'transparent',
+      strokeWidth: '5px',
     );
 
+    var lastDraw = first.offset;
+    const minDistanceSquared = 9;
+
     stream.listen((event) {
-      print('move');
-      path.add(event.offset);
-      path.applyTo(pathEl);
+      if (event.offset.squaredDistanceTo(lastDraw) > minDistanceSquared) {
+        path.add(event.offset);
+        path.applyTo(pathEl);
+        lastDraw = event.offset;
+      }
     }, onDone: () => print('up'));
   }
 }
