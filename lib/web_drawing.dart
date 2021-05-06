@@ -4,25 +4,43 @@ import 'dart:math';
 
 import 'package:web_drawing/layers/drawing_layer.dart';
 import 'package:web_drawing/layers/layer.dart';
+import 'package:web_drawing/layers/text_layer.dart';
 
 class DrawingCanvas {
   final HtmlElement container;
+  final InputElement textInput;
   final _layers = <Layer>[];
-  int layerIndex = 0;
+
+  int _layerIndex = 0;
+  int get layerIndex => _layerIndex;
+  set layerIndex(int layerIndex) {
+    _layerIndex = layerIndex;
+
+    if (layer is TextLayer) {
+      textInput.text = (layer as TextLayer).text;
+    }
+  }
+
   bool eraser = false;
   bool useShortcuts = true;
 
   Layer get layer => _layers[layerIndex];
 
-  DrawingCanvas(this.container) {
+  DrawingCanvas(this.container, [InputElement text])
+      : textInput = text ?? InputElement() {
     _initDom();
+    _initTextInput();
     _initCursorControls();
-    _initShortcuts();
-    _addLayer(DrawingLayer(this));
+    _initKeyListener();
+    addTextLayer();
   }
 
   DrawingLayer addDrawingLayer() {
     return _addLayer(DrawingLayer(this));
+  }
+
+  TextLayer addTextLayer() {
+    return _addLayer(TextLayer(this));
   }
 
   L _addLayer<L extends Layer>(L layer) {
@@ -37,7 +55,22 @@ class DrawingCanvas {
     }
   }
 
-  void _initShortcuts() {
+  void _initTextInput() {
+    if (!textInput.isConnected) {
+      container.append(textInput
+        ..style.position = 'absolute'
+        ..style.zIndex = '10'
+        ..placeholder = 'Text...');
+    }
+
+    textInput.onInput.listen((ev) {
+      if (layer is TextLayer) {
+        (layer as TextLayer).text = textInput.value;
+      }
+    });
+  }
+
+  void _initKeyListener() {
     window.onKeyDown.listen((ev) {
       if (useShortcuts && ev.target is! InputElement) {
         switch (ev.key) {
@@ -57,6 +90,10 @@ class DrawingCanvas {
             layerIndex = max(0, layerIndex - 1);
             return print('Layer: $layerIndex');
         }
+
+        if (layer is TextLayer && ev.keyCode == 13) {
+          textInput.focus();
+        }
       }
     });
   }
@@ -71,8 +108,11 @@ class DrawingCanvas {
       Stream<T> endEvent,
     ) {
       startEvent.listen((ev) async {
+        if (ev.target is InputElement) return;
+
         ev.preventDefault();
-        moveStreamCtrl = StreamController();
+        document.activeElement.blur();
+        moveStreamCtrl = StreamController.broadcast();
         layer.onMouseDown(evToPoint(ev), moveStreamCtrl.stream);
 
         await endEvent.first;

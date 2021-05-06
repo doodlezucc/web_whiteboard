@@ -9,9 +9,6 @@ class DrawingLayer extends Layer {
   DrawingLayer(DrawingCanvas canvas) : super(canvas);
 
   @override
-  void onClick(MouseEvent ev) {}
-
-  @override
   void onMouseDown(Point first, Stream<Point> stream) {
     if (canvas.eraser) {
       _handleEraseStream(first, stream);
@@ -22,7 +19,7 @@ class DrawingLayer extends Layer {
 
   void _handleDrawStream(Point first, Stream<Point> stream) {
     var pathEl = svg.PathElement();
-    el.append(pathEl);
+    layerEl.append(pathEl);
 
     var path = SvgPath(
       points: [first],
@@ -46,10 +43,10 @@ class DrawingLayer extends Layer {
   }
 
   void _handleEraseStream(Point first, Stream<Point> stream) {
-    var paths = List.from(el.children);
+    var paths = List.from(layerEl.children);
 
     void eraseAt(Point p) {
-      var svgPoint = el.createSvgPoint()
+      var svgPoint = layerEl.createSvgPoint()
         ..x = p.x
         ..y = p.y;
       var changed = false;
@@ -62,7 +59,7 @@ class DrawingLayer extends Layer {
       }
 
       if (changed) {
-        paths = List.from(el.children);
+        paths = List.from(layerEl.children);
       }
     }
 
