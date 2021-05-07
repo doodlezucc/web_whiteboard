@@ -5,19 +5,19 @@ import 'dart:svg' as svg;
 import 'package:web_drawing/binary.dart';
 
 class SvgPath {
-  List<Point> points = [];
+  List<Point> points;
   String fill;
   String stroke;
   String strokeWidth;
-  String strokeCap;
 
   SvgPath({
     this.points,
     this.fill,
     this.stroke,
     this.strokeWidth = '1px',
-    this.strokeCap = 'round',
-  });
+  }) {
+    points ??= [];
+  }
 
   void add(Point p) => points.add(p);
 
@@ -42,7 +42,7 @@ class SvgPath {
     element.setAttribute('stroke', stroke);
     element.setAttribute('fill', fill);
     element.setAttribute('stroke-width', strokeWidth);
-    element.setAttribute('stroke-linecap', strokeCap);
+    element.setAttribute('stroke-linecap', 'round');
   }
 
   void writeToBytes(BinaryWriter writer) {
@@ -51,5 +51,18 @@ class SvgPath {
       writer.addInt32(p.x);
       writer.addInt32(p.y);
     }
+    writer.addString(stroke);
+    writer.addString(fill);
+    writer.addString(strokeWidth);
+  }
+
+  void loadFromBytes(BinaryReader reader) {
+    var count = reader.readUInt32();
+    for (var i = 0; i < count; i++) {
+      points.add(Point(reader.readInt32(), reader.readInt32()));
+    }
+    stroke = reader.readString();
+    fill = reader.readString();
+    strokeWidth = reader.readString();
   }
 }

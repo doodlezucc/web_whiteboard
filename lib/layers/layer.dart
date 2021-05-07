@@ -20,4 +20,5 @@ abstract class Layer {
   void onMouseDown(Point first, Stream<Point> moveStream);
 
   void writeToBytes(BinaryWriter writer);
+  void loadFromBytes(BinaryReader reader);
 }

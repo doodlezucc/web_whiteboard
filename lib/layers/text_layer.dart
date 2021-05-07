@@ -49,11 +49,7 @@ class TextLayer extends Layer {
       ..fontWeight = 'bold'
       ..fontSize = '24px'
       ..textShadow = '0 0 2px #fff7';
-  }
-
-  @override
-  void onMouseDown(Point first, Stream<Point> stream) {
-    textElement ??= svg.TextElement()
+    textElement = svg.TextElement()
       ..x.baseVal.appendItem(_zeroLength)
       ..y.baseVal.appendItem(_zeroLength)
       ..text = 'Text'
@@ -61,25 +57,34 @@ class TextLayer extends Layer {
       ..setAttribute('dominant-baseline', 'central')
       ..setAttribute('fill', '#111');
     layerEl.append(textElement);
+  }
 
-    void move(Point p) {
-      textElement
-        ..x.baseVal[0].value = p.x
-        ..y.baseVal[0].value = p.y;
-      textElement.children
-          .whereType<svg.TSpanElement>()
-          .forEach((span) => span.x.baseVal[0].value = p.x);
-    }
-
+  @override
+  void onMouseDown(Point first, Stream<Point> stream) {
     move(first);
     stream.listen((p) => move(p));
+  }
+
+  void move(Point p) {
+    textElement
+      ..x.baseVal[0].value = p.x
+      ..y.baseVal[0].value = p.y;
+    textElement.children
+        .whereType<svg.TSpanElement>()
+        .forEach((span) => span.x.baseVal[0].value = p.x);
   }
 
   @override
   void writeToBytes(BinaryWriter writer) {
     writer.addUInt8(1); // Layer type
-    writer.addString(text);
     writer.addInt32(textElement.x.baseVal[0].value);
     writer.addInt32(textElement.y.baseVal[0].value);
+    writer.addString(text);
+  }
+
+  @override
+  void loadFromBytes(BinaryReader reader) {
+    move(Point(reader.readInt32(), reader.readInt32()));
+    text = reader.readString();
   }
 }

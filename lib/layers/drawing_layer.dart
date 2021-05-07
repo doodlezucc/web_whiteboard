@@ -20,10 +20,15 @@ class DrawingLayer extends Layer {
     }
   }
 
-  void _handleDrawStream(Point first, Stream<Point> stream) {
+  svg.PathElement _addPath(SvgPath data) {
     var pathEl = svg.PathElement();
+    data.applyTo(pathEl);
     layerEl.append(pathEl);
+    _paths.add(data);
+    return pathEl;
+  }
 
+  void _handleDrawStream(Point first, Stream<Point> stream) {
     var path = SvgPath(
       points: [first],
       stroke: '#000000',
@@ -31,9 +36,7 @@ class DrawingLayer extends Layer {
       strokeWidth: '5px',
     );
 
-    _paths.add(path);
-
-    path.applyTo(pathEl);
+    var pathEl = _addPath(path);
 
     var lastDraw = first;
     const minDistanceSquared = 12;
@@ -79,6 +82,15 @@ class DrawingLayer extends Layer {
     writer.addUInt16(_paths.length);
     for (var path in _paths) {
       path.writeToBytes(writer);
+    }
+  }
+
+  @override
+  void loadFromBytes(BinaryReader reader) {
+    var pathCount = reader.readUInt16();
+    for (var i = 0; i < pathCount; i++) {
+      var data = SvgPath()..loadFromBytes(reader);
+      _addPath(data);
     }
   }
 }

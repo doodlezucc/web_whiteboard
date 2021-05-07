@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html';
 import 'dart:math';
 import 'dart:typed_data';
@@ -39,11 +40,32 @@ class DrawingCanvas {
 
   Uint8List saveToBytes() {
     var writer = BinaryWriter();
+    writer.addUInt16(_layers.length);
     for (var layer in _layers) {
       layer.writeToBytes(writer);
     }
     return writer.takeBytes();
   }
+
+  void loadFromBytes(Uint8List bytes) {
+    var reader = BinaryReader(bytes.buffer);
+    var layerCount = reader.readUInt16();
+    for (var i = 0; i < layerCount; i++) {
+      Layer layer;
+      switch (reader.readUInt8()) {
+        case 0:
+          layer = addDrawingLayer();
+          break;
+        case 1:
+          layer = addTextLayer();
+          break;
+      }
+      layer.loadFromBytes(reader);
+    }
+  }
+
+  String encode() => base64.encode(saveToBytes());
+  void decode(String data) => loadFromBytes(base64.decode(data));
 
   DrawingLayer addDrawingLayer() {
     return _addLayer(DrawingLayer(this));
