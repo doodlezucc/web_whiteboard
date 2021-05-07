@@ -7,7 +7,7 @@ import 'package:web_drawing/svg_utils.dart';
 import 'package:web_drawing/web_drawing.dart';
 
 class DrawingLayer extends Layer {
-  final _paths = <SvgPath>[];
+  final _pathData = <svg.PathElement, SvgPath>{};
 
   DrawingLayer(DrawingCanvas canvas) : super(canvas);
 
@@ -24,7 +24,7 @@ class DrawingLayer extends Layer {
     var pathEl = svg.PathElement();
     data.applyTo(pathEl);
     layerEl.append(pathEl);
-    _paths.add(data);
+    _pathData[pathEl] = data;
     return pathEl;
   }
 
@@ -62,6 +62,7 @@ class DrawingLayer extends Layer {
       for (svg.PathElement path in paths) {
         if (path.isPointInStroke(svgPoint)) {
           path.remove();
+          _pathData.remove(path);
           changed = true;
         }
       }
@@ -79,9 +80,9 @@ class DrawingLayer extends Layer {
   @override
   void writeToBytes(BinaryWriter writer) {
     writer.addUInt8(0); // Layer type
-    writer.addUInt16(_paths.length);
-    for (var path in _paths) {
-      path.writeToBytes(writer);
+    writer.addUInt16(_pathData.length);
+    for (var data in _pathData.values) {
+      data.writeToBytes(writer);
     }
   }
 
