@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
+import 'package:web_drawing/binary.dart';
 import 'package:web_drawing/web_drawing.dart';
 
 abstract class Layer {
@@ -17,4 +18,6 @@ abstract class Layer {
   }
 
   void onMouseDown(Point first, Stream<Point> moveStream);
+
+  void writeToBytes(BinaryWriter writer);
 }

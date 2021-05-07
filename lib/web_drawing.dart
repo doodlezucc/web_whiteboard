@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:html';
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:web_drawing/binary.dart';
 import 'package:web_drawing/layers/drawing_layer.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/layers/text_layer.dart';
@@ -33,6 +35,14 @@ class DrawingCanvas {
     _initCursorControls();
     _initKeyListener();
     addTextLayer();
+  }
+
+  Uint8List saveToBytes() {
+    var writer = BinaryWriter();
+    for (var layer in _layers) {
+      layer.writeToBytes(writer);
+    }
+    return writer.takeBytes();
   }
 
   DrawingLayer addDrawingLayer() {

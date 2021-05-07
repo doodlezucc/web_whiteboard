@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'dart:svg' as svg;
 
+import 'package:web_drawing/binary.dart';
+
 class SvgPath {
   List<Point> points = [];
   String fill;
@@ -41,5 +43,13 @@ class SvgPath {
     element.setAttribute('fill', fill);
     element.setAttribute('stroke-width', strokeWidth);
     element.setAttribute('stroke-linecap', strokeCap);
+  }
+
+  void writeToBytes(BinaryWriter writer) {
+    writer.addUInt32(points.length);
+    for (var p in points) {
+      writer.addInt32(p.x);
+      writer.addInt32(p.y);
+    }
   }
 }

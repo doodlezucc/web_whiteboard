@@ -1,11 +1,14 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
+import 'package:web_drawing/binary.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/svg_utils.dart';
 import 'package:web_drawing/web_drawing.dart';
 
 class DrawingLayer extends Layer {
+  final _paths = <SvgPath>[];
+
   DrawingLayer(DrawingCanvas canvas) : super(canvas);
 
   @override
@@ -27,6 +30,8 @@ class DrawingLayer extends Layer {
       fill: 'transparent',
       strokeWidth: '5px',
     );
+
+    _paths.add(path);
 
     path.applyTo(pathEl);
 
@@ -66,5 +71,14 @@ class DrawingLayer extends Layer {
     eraseAt(first);
 
     stream.listen(eraseAt);
+  }
+
+  @override
+  void writeToBytes(BinaryWriter writer) {
+    writer.addUInt8(0); // Layer type
+    writer.addUInt16(_paths.length);
+    for (var path in _paths) {
+      path.writeToBytes(writer);
+    }
   }
 }

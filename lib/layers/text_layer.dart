@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
+import 'package:web_drawing/binary.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/web_drawing.dart';
 
@@ -72,5 +73,13 @@ class TextLayer extends Layer {
 
     move(first);
     stream.listen((p) => move(p));
+  }
+
+  @override
+  void writeToBytes(BinaryWriter writer) {
+    writer.addUInt8(1); // Layer type
+    writer.addString(text);
+    writer.addInt32(textElement.x.baseVal[0].value);
+    writer.addInt32(textElement.y.baseVal[0].value);
   }
 }
