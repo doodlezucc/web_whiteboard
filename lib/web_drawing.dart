@@ -35,7 +35,7 @@ class DrawingCanvas {
     _initTextInput();
     _initCursorControls();
     _initKeyListener();
-    addTextLayer();
+    addDrawingLayer();
   }
 
   Uint8List saveToBytes() {
@@ -67,6 +67,16 @@ class DrawingCanvas {
   String encode() => base64.encode(saveToBytes());
   void decode(String data) => loadFromBytes(base64.decode(data));
 
+  void removeLayer(int index) {
+    _layers[index].dispose();
+    _layers.removeAt(index);
+    if (_layerIndex == index) {
+      layerIndex = index; // Yeah, this setter does something besides setting.
+    } else if (_layerIndex > index || index == _layers.length) {
+      layerIndex--;
+    }
+  }
+
   DrawingLayer addDrawingLayer() {
     return _addLayer(DrawingLayer(this));
   }
@@ -79,6 +89,14 @@ class DrawingCanvas {
     _layers.add(layer);
     layerIndex = _layers.length - 1;
     return layer;
+  }
+
+  void clear() {
+    for (var l in _layers) {
+      l.dispose();
+    }
+    _layers.clear();
+    addDrawingLayer();
   }
 
   void _initDom() {
@@ -115,6 +133,10 @@ class DrawingCanvas {
           case 'D':
             addDrawingLayer();
             return print('Added drawing layer');
+
+          case 'T':
+            addTextLayer();
+            return print('Added text layer');
 
           case 'ArrowUp':
             layerIndex = min(_layers.length - 1, layerIndex + 1);

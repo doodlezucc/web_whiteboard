@@ -19,6 +19,10 @@ abstract class Layer {
 
   void onMouseDown(Point first, Stream<Point> moveStream);
 
+  void dispose() {
+    layerEl.remove();
+  }
+
   void writeToBytes(BinaryWriter writer);
   void loadFromBytes(BinaryReader reader);
 }

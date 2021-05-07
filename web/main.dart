@@ -22,6 +22,9 @@ void main() {
           print(data);
           canvas.decode(data);
         }
+      } else if (ev.key == 'Delete' || ev.key == 'Backspace') {
+        ev.preventDefault();
+        canvas.clear();
       }
     }
   });
