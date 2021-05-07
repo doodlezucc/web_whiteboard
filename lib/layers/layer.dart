@@ -10,6 +10,8 @@ abstract class Layer {
   bool visible = true;
   bool get isFocused => canvas.layer == this;
 
+  int get layerType;
+
   Layer(this.canvas) : layerEl = svg.SvgSvgElement() {
     layerEl.width.baseVal.valueAsString = '100%';
     layerEl.height.baseVal.valueAsString = '100%';

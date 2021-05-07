@@ -4,7 +4,13 @@ import 'dart:js';
 import 'package:web_drawing/web_drawing.dart';
 
 void main() {
-  var canvas = DrawingCanvas(querySelector('#canvas'));
+  var canvas = DrawingCanvas(querySelector('#canvas'))
+    ..fontFamily = 'Arial'
+    ..fontSize = '32px'
+    ..fontWeight = 'bold'
+    ..textColor = '#BDADEA'
+    ..outlineColor = '#4E4B5C'
+    ..outlineWidth = 8;
 
   window.onKeyDown.listen((ev) {
     if (ev.ctrlKey) {

@@ -5,11 +5,12 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:web_drawing/binary.dart';
+import 'package:web_drawing/font_styleable.dart';
 import 'package:web_drawing/layers/drawing_layer.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/layers/text_layer.dart';
 
-class DrawingCanvas {
+class DrawingCanvas with FontStyleable {
   final HtmlElement container;
   final TextAreaElement textInput;
   final _layers = <Layer>[];
@@ -48,20 +49,24 @@ class DrawingCanvas {
   }
 
   void loadFromBytes(Uint8List bytes) {
+    clear();
     var reader = BinaryReader(bytes.buffer);
     var layerCount = reader.readUInt16();
     for (var i = 0; i < layerCount; i++) {
-      Layer layer;
-      switch (reader.readUInt8()) {
-        case 0:
-          layer = addDrawingLayer();
-          break;
-        case 1:
-          layer = addTextLayer();
-          break;
-      }
-      layer.loadFromBytes(reader);
+      _addLayerType(reader.readUInt8()).loadFromBytes(reader);
     }
+  }
+
+  Layer _addLayerType(int type) {
+    switch (type) {
+      case 0:
+        return addDrawingLayer();
+      case 1:
+        return addTextLayer();
+      case 2:
+        return addTextLayerWithStyle();
+    }
+    return null;
   }
 
   String encode() => base64.encode(saveToBytes());
@@ -77,13 +82,11 @@ class DrawingCanvas {
     }
   }
 
-  DrawingLayer addDrawingLayer() {
-    return _addLayer(DrawingLayer(this));
-  }
+  DrawingLayer addDrawingLayer() => _addLayer(DrawingLayer(this));
 
-  TextLayer addTextLayer() {
-    return _addLayer(TextLayer(this));
-  }
+  TextLayer addTextLayer() => _addLayer(TextLayer(this));
+  StylizedTextLayer addTextLayerWithStyle() =>
+      _addLayer(StylizedTextLayer(this));
 
   L _addLayer<L extends Layer>(L layer) {
     _layers.add(layer);
@@ -96,7 +99,6 @@ class DrawingCanvas {
       l.dispose();
     }
     _layers.clear();
-    addDrawingLayer();
   }
 
   void _initDom() {
@@ -192,4 +194,7 @@ class DrawingCanvas {
         window.onTouchMove,
         window.onTouchEnd);
   }
+
+  @override
+  CssStyleDeclaration get style => container.style;
 }

@@ -2,6 +2,7 @@ import 'dart:html';
 import 'dart:svg' as svg;
 
 import 'package:web_drawing/binary.dart';
+import 'package:web_drawing/font_styleable.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/web_drawing.dart';
 
@@ -39,23 +40,17 @@ class TextLayer extends Layer {
     _text = text;
   }
 
-  CssStyleDeclaration get style => layerEl.style;
-
   svg.Length _zeroLength;
 
   TextLayer(DrawingCanvas canvas) : super(canvas) {
     _zeroLength = layerEl.createSvgLength()..value = 0;
-    style
-      ..fontWeight = 'bold'
-      ..fontSize = '24px'
-      ..textShadow = '0 0 2px #fff7';
     textElement = svg.TextElement()
       ..x.baseVal.appendItem(_zeroLength)
       ..y.baseVal.appendItem(_zeroLength)
       ..text = 'Text'
+      ..setAttribute('paint-order', 'stroke')
       ..setAttribute('text-anchor', 'middle')
-      ..setAttribute('dominant-baseline', 'central')
-      ..setAttribute('fill', '#111');
+      ..setAttribute('dominant-baseline', 'central');
     layerEl.append(textElement);
   }
 
@@ -76,7 +71,7 @@ class TextLayer extends Layer {
 
   @override
   void writeToBytes(BinaryWriter writer) {
-    writer.addUInt8(1); // Layer type
+    writer.addUInt8(layerType); // Layer type
     writer.addInt32(textElement.x.baseVal[0].value);
     writer.addInt32(textElement.y.baseVal[0].value);
     writer.addString(text);
@@ -86,5 +81,30 @@ class TextLayer extends Layer {
   void loadFromBytes(BinaryReader reader) {
     move(Point(reader.readInt32(), reader.readInt32()));
     text = reader.readString();
+  }
+
+  @override
+  int get layerType => 1;
+}
+
+class StylizedTextLayer extends TextLayer with FontStyleable {
+  StylizedTextLayer(DrawingCanvas canvas) : super(canvas);
+
+  @override
+  CssStyleDeclaration get style => layerEl.style;
+
+  @override
+  int get layerType => 2;
+
+  @override
+  void writeToBytes(BinaryWriter writer) {
+    super.writeToBytes(writer);
+    writeStyleToBytes(writer);
+  }
+
+  @override
+  void loadFromBytes(BinaryReader reader) {
+    super.loadFromBytes(reader);
+    readStyleFromBytes(reader);
   }
 }
