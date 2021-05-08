@@ -9,7 +9,7 @@ import 'package:web_drawing/web_drawing.dart';
 class TextLayer extends Layer {
   svg.TextElement textElement;
 
-  String _text;
+  String _text = 'Text';
   String get text => _text;
   set text(String text) {
     textElement.children.clear();
@@ -47,7 +47,7 @@ class TextLayer extends Layer {
     textElement = svg.TextElement()
       ..x.baseVal.appendItem(_zeroLength)
       ..y.baseVal.appendItem(_zeroLength)
-      ..text = 'Text'
+      ..text = _text
       ..setAttribute('paint-order', 'stroke')
       ..setAttribute('text-anchor', 'middle')
       ..setAttribute('dominant-baseline', 'central');
@@ -71,15 +71,15 @@ class TextLayer extends Layer {
 
   @override
   void writeToBytes(BinaryWriter writer) {
-    writer.addUInt8(layerType); // Layer type
-    writer.addInt32(textElement.x.baseVal[0].value);
-    writer.addInt32(textElement.y.baseVal[0].value);
-    writer.addString(text);
+    writer.writeUInt8(layerType); // Layer type
+    writer.writePoint(
+        Point(textElement.x.baseVal[0].value, textElement.y.baseVal[0].value));
+    writer.writeString(text);
   }
 
   @override
   void loadFromBytes(BinaryReader reader) {
-    move(Point(reader.readInt32(), reader.readInt32()));
+    move(reader.readPoint());
     text = reader.readString();
   }
 

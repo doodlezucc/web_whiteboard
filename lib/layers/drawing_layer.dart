@@ -82,8 +82,8 @@ class DrawingLayer extends Layer {
 
   @override
   void writeToBytes(BinaryWriter writer) {
-    writer.addUInt8(layerType); // Layer type
-    writer.addUInt16(_pathData.length);
+    writer.writeUInt8(layerType); // Layer type
+    writer.writeUInt16(_pathData.length);
     for (var data in _pathData.values) {
       data.writeToBytes(writer);
     }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 final _buffer = ByteData(4);
@@ -8,18 +9,28 @@ class BinaryWriter {
 
   Uint8List takeBytes() => builder.takeBytes();
 
-  void addUInt8(int i) => builder.addByte(i);
-  void addUInt16(int i) => builder.add([i >> 8, i]);
-  void addUInt32(int i) => builder.add([i >> 32, i >> 16, i >> 8, i]);
+  void writeUInt8(int i) => builder.addByte(i);
+  void writeUInt16(int i) => builder.add([i >> 8, i]);
+  void writeUInt32(int i) => builder.add([i >> 32, i >> 16, i >> 8, i]);
 
-  void addInt32(int i) {
+  void writePoint(Point p) {
+    writeInt16(p.x);
+    writeInt16(p.y);
+  }
+
+  void writeInt16(int i) {
+    _buffer.setInt16(0, i);
+    builder.add(_buffer.buffer.asUint8List(0, 2));
+  }
+
+  void writeInt32(int i) {
     _buffer.setInt32(0, i);
     builder.add(_buffer.buffer.asUint8List());
   }
 
-  void addString(String s) {
+  void writeString(String s) {
     var bytes = utf8.encode(s);
-    addUInt16(bytes.length);
+    writeUInt16(bytes.length);
     builder.add(bytes);
   }
 }
@@ -39,7 +50,10 @@ class BinaryReader {
   int readUInt16() => _read(data.getUint16(offset), 2);
   int readUInt32() => _read(data.getUint32(offset), 4);
 
+  int readInt16() => _read(data.getInt16(offset), 2);
   int readInt32() => _read(data.getInt32(offset), 4);
+
+  Point readPoint() => Point(readInt32(), readInt32());
 
   String readString() {
     var length = readUInt16();

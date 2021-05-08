@@ -46,20 +46,19 @@ class SvgPath {
   }
 
   void writeToBytes(BinaryWriter writer) {
-    writer.addUInt32(points.length);
+    writer.writeUInt32(points.length);
     for (var p in points) {
-      writer.addInt32(p.x);
-      writer.addInt32(p.y);
+      writer.writePoint(p);
     }
-    writer.addString(stroke);
-    writer.addString(fill);
-    writer.addString(strokeWidth);
+    writer.writeString(stroke);
+    writer.writeString(fill);
+    writer.writeString(strokeWidth);
   }
 
   void loadFromBytes(BinaryReader reader) {
     var count = reader.readUInt32();
     for (var i = 0; i < count; i++) {
-      points.add(Point(reader.readInt32(), reader.readInt32()));
+      points.add(reader.readPoint());
     }
     stroke = reader.readString();
     fill = reader.readString();

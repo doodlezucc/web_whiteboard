@@ -21,7 +21,11 @@ class DrawingCanvas with FontStyleable {
     _layerIndex = layerIndex;
 
     if (layer is TextLayer) {
-      textInput.text = (layer as TextLayer).text;
+      textInput.value = (layer as TextLayer).text;
+      textInput.disabled = false;
+    } else {
+      textInput.value = '';
+      textInput.disabled = true;
     }
   }
 
@@ -41,7 +45,7 @@ class DrawingCanvas with FontStyleable {
 
   Uint8List saveToBytes() {
     var writer = BinaryWriter();
-    writer.addUInt16(_layers.length);
+    writer.writeUInt16(_layers.length);
     for (var layer in _layers) {
       layer.writeToBytes(writer);
     }

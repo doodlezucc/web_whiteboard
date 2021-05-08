@@ -28,13 +28,13 @@ mixin FontStyleable {
       style.setProperty('stroke-width', '$width');
 
   void writeStyleToBytes(BinaryWriter writer) {
-    writer.addString(fontSize);
-    writer.addString(fontWeight);
-    writer.addString(fontFamily);
-    writer.addString(fontStyle);
-    writer.addString(textColor);
-    writer.addString(outlineColor);
-    writer.addString(outlineWidth);
+    writer.writeString(fontSize);
+    writer.writeString(fontWeight);
+    writer.writeString(fontFamily);
+    writer.writeString(fontStyle);
+    writer.writeString(textColor);
+    writer.writeString(outlineColor);
+    writer.writeString(outlineWidth);
   }
 
   void readStyleFromBytes(BinaryReader reader) {
