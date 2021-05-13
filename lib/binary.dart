@@ -13,7 +13,7 @@ class BinaryWriter {
   void writeUInt16(int i) => builder.add([i >> 8, i]);
   void writeUInt32(int i) => builder.add([i >> 32, i >> 16, i >> 8, i]);
 
-  void writePoint(Point p) {
+  void writePoint(Point<int> p) {
     writeInt16(p.x);
     writeInt16(p.y);
   }
@@ -53,7 +53,7 @@ class BinaryReader {
   int readInt16() => _read(data.getInt16(offset), 2);
   int readInt32() => _read(data.getInt32(offset), 4);
 
-  Point readPoint() => Point(readInt16(), readInt16());
+  Point<int> readPoint() => Point<int>(readInt16(), readInt16());
 
   String readString() {
     var length = readUInt16();

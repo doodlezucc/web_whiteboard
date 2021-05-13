@@ -46,6 +46,18 @@ class TextLayer extends Layer {
     _text = text;
   }
 
+  Point<int> _position = Point(0, 0);
+  Point<int> get position => _position;
+  set position(Point<int> position) {
+    _position = position;
+    textElement
+      ..x.baseVal[0].value = position.x
+      ..y.baseVal[0].value = position.y;
+    textElement.children
+        .whereType<svg.TSpanElement>()
+        .forEach((span) => span.x.baseVal[0].value = position.x);
+  }
+
   svg.Length _zeroLength;
 
   TextLayer(DrawingCanvas canvas) : super(canvas, svg.TextElement()) {
@@ -61,17 +73,8 @@ class TextLayer extends Layer {
 
   @override
   void onMouseDown(Point first, Stream<Point> stream) {
-    move(first);
-    stream.listen((p) => move(p));
-  }
-
-  void move(Point p) {
-    textElement
-      ..x.baseVal[0].value = p.x
-      ..y.baseVal[0].value = p.y;
-    textElement.children
-        .whereType<svg.TSpanElement>()
-        .forEach((span) => span.x.baseVal[0].value = p.x);
+    position = first;
+    stream.listen((p) => position = p);
   }
 
   @override
@@ -85,7 +88,7 @@ class TextLayer extends Layer {
 
   @override
   void loadFromBytes(BinaryReader reader) {
-    move(reader.readPoint());
+    position = reader.readPoint();
     fontSize = reader.readString();
     text = reader.readString();
   }
