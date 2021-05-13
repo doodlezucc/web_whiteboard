@@ -53,7 +53,7 @@ class BinaryReader {
   int readInt16() => _read(data.getInt16(offset), 2);
   int readInt32() => _read(data.getInt32(offset), 4);
 
-  Point readPoint() => Point(readInt32(), readInt32());
+  Point readPoint() => Point(readInt16(), readInt16());
 
   String readString() {
     var length = readUInt16();

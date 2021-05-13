@@ -7,7 +7,7 @@ import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/web_drawing.dart';
 
 class TextLayer extends Layer {
-  svg.TextElement textElement;
+  svg.TextElement get textElement => layerEl;
 
   String _text = 'Text';
   String get text => _text;
@@ -28,7 +28,7 @@ class TextLayer extends Layer {
         ..x.baseVal.appendItem(_zeroLength)
         ..dy
             .baseVal
-            .appendItem(layerEl.createSvgLength()..valueAsString = '1.2em');
+            .appendItem(canvas.root.createSvgLength()..valueAsString = '1.2em');
 
       if (empty) {
         span.style.visibility = 'hidden';
@@ -42,16 +42,15 @@ class TextLayer extends Layer {
 
   svg.Length _zeroLength;
 
-  TextLayer(DrawingCanvas canvas) : super(canvas) {
-    _zeroLength = layerEl.createSvgLength()..value = 0;
-    textElement = svg.TextElement()
+  TextLayer(DrawingCanvas canvas) : super(canvas, svg.TextElement()) {
+    _zeroLength = canvas.root.createSvgLength()..value = 0;
+    textElement
       ..x.baseVal.appendItem(_zeroLength)
       ..y.baseVal.appendItem(_zeroLength)
       ..text = _text
       ..setAttribute('paint-order', 'stroke')
       ..setAttribute('text-anchor', 'middle')
       ..setAttribute('dominant-baseline', 'central');
-    layerEl.append(textElement);
   }
 
   @override

@@ -6,17 +6,15 @@ import 'package:web_drawing/web_drawing.dart';
 
 abstract class Layer {
   final DrawingCanvas canvas;
-  final svg.SvgSvgElement layerEl;
+  final svg.SvgElement layerEl;
   bool visible = true;
   bool get isFocused => canvas.layer == this;
 
   int get layerType;
 
-  Layer(this.canvas) : layerEl = svg.SvgSvgElement() {
-    layerEl.width.baseVal.valueAsString = '100%';
-    layerEl.height.baseVal.valueAsString = '100%';
+  Layer(this.canvas, this.layerEl) {
     layerEl.style.position = 'absolute';
-    canvas.container.append(layerEl);
+    canvas.root.append(layerEl);
   }
 
   void onMouseDown(Point first, Stream<Point> moveStream);

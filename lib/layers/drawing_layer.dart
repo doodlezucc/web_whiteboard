@@ -3,13 +3,14 @@ import 'dart:svg' as svg;
 
 import 'package:web_drawing/binary.dart';
 import 'package:web_drawing/layers/layer.dart';
-import 'package:web_drawing/svg_utils.dart';
+import 'package:web_drawing/stroke.dart';
+import 'package:web_drawing/util.dart';
 import 'package:web_drawing/web_drawing.dart';
 
 class DrawingLayer extends Layer {
-  final _pathData = <svg.PathElement, SvgPath>{};
+  final _pathData = <svg.PathElement, Stroke>{};
 
-  DrawingLayer(DrawingCanvas canvas) : super(canvas);
+  DrawingLayer(DrawingCanvas canvas) : super(canvas, svg.GElement());
 
   @override
   void onMouseDown(Point first, Stream<Point> stream) {
@@ -20,19 +21,18 @@ class DrawingLayer extends Layer {
     }
   }
 
-  svg.PathElement _addPath(SvgPath data) {
+  svg.PathElement _addPath(Stroke data) {
     var pathEl = svg.PathElement();
-    data.applyTo(pathEl);
+    applyStroke(data, pathEl);
     layerEl.append(pathEl);
     _pathData[pathEl] = data;
     return pathEl;
   }
 
   void _handleDrawStream(Point first, Stream<Point> stream) {
-    var path = SvgPath(
+    var path = Stroke(
       points: [first],
       stroke: '#000000',
-      fill: 'transparent',
       strokeWidth: '5px',
     );
 
@@ -44,7 +44,7 @@ class DrawingLayer extends Layer {
     stream.listen((p) {
       if (p.squaredDistanceTo(lastDraw) > minDistanceSquared) {
         path.add(p);
-        path.applyTo(pathEl);
+        applyStroke(path, pathEl);
         lastDraw = p;
       }
     });
@@ -54,7 +54,7 @@ class DrawingLayer extends Layer {
     var paths = List.from(layerEl.children);
 
     void eraseAt(Point p) {
-      var svgPoint = layerEl.createSvgPoint()
+      var svgPoint = canvas.root.createSvgPoint()
         ..x = p.x
         ..y = p.y;
       var changed = false;
@@ -93,7 +93,7 @@ class DrawingLayer extends Layer {
   void loadFromBytes(BinaryReader reader) {
     var pathCount = reader.readUInt16();
     for (var i = 0; i < pathCount; i++) {
-      var data = SvgPath()..loadFromBytes(reader);
+      var data = Stroke()..loadFromBytes(reader);
       _addPath(data);
     }
   }

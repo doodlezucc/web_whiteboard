@@ -1,18 +1,14 @@
 import 'dart:math';
 
-import 'dart:svg' as svg;
-
 import 'package:web_drawing/binary.dart';
 
-class SvgPath {
+class Stroke {
   List<Point> points;
-  String fill;
   String stroke;
   String strokeWidth;
 
-  SvgPath({
+  Stroke({
     this.points,
-    this.fill,
     this.stroke,
     this.strokeWidth = '1px',
   }) {
@@ -37,21 +33,12 @@ class SvgPath {
     return s;
   }
 
-  void applyTo(svg.PathElement element) {
-    element.setAttribute('d', toData());
-    element.setAttribute('stroke', stroke);
-    element.setAttribute('fill', fill);
-    element.setAttribute('stroke-width', strokeWidth);
-    element.setAttribute('stroke-linecap', 'round');
-  }
-
   void writeToBytes(BinaryWriter writer) {
     writer.writeUInt32(points.length);
     for (var p in points) {
       writer.writePoint(p);
     }
     writer.writeString(stroke);
-    writer.writeString(fill);
     writer.writeString(strokeWidth);
   }
 
@@ -61,7 +48,6 @@ class SvgPath {
       points.add(reader.readPoint());
     }
     stroke = reader.readString();
-    fill = reader.readString();
     strokeWidth = reader.readString();
   }
 }

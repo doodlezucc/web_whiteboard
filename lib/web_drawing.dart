@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
 import 'dart:math';
+import 'dart:svg' as svg;
 import 'dart:typed_data';
 
 import 'package:web_drawing/binary.dart';
@@ -12,6 +13,7 @@ import 'package:web_drawing/layers/text_layer.dart';
 
 class DrawingCanvas with FontStyleable {
   final HtmlElement container;
+  final svg.SvgSvgElement root;
   final TextAreaElement textInput;
   final _layers = <Layer>[];
 
@@ -35,12 +37,18 @@ class DrawingCanvas with FontStyleable {
   Layer get layer => _layers[layerIndex];
 
   DrawingCanvas(this.container, [TextAreaElement text])
-      : textInput = text ?? TextAreaElement() {
+      : textInput = text ?? TextAreaElement(),
+        root = svg.SvgSvgElement() {
     _initDom();
     _initTextInput();
     _initCursorControls();
     _initKeyListener();
     addDrawingLayer();
+
+    root
+      ..width.baseVal.valueAsString = '100%'
+      ..height.baseVal.valueAsString = '100%';
+    container.append(root);
   }
 
   Uint8List saveToBytes() {
