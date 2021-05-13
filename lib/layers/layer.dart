@@ -7,10 +7,6 @@ import 'package:web_whiteboard/whiteboard.dart';
 abstract class Layer {
   final Whiteboard canvas;
   final svg.SvgElement layerEl;
-  bool visible = true;
-  bool get isFocused => canvas.layer == this;
-
-  int get layerType;
 
   Layer(this.canvas, this.layerEl) {
     layerEl.style.position = 'absolute';

@@ -2,12 +2,13 @@ import 'dart:html';
 import 'dart:svg' as svg;
 
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/layers/drawing_data.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/util.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
-class DrawingLayer extends Layer {
+class DrawingLayer extends Layer with DrawingData {
   final _pathData = <svg.PathElement, Stroke>{};
 
   DrawingLayer(Whiteboard canvas) : super(canvas, svg.GElement());
@@ -36,6 +37,7 @@ class DrawingLayer extends Layer {
       strokeWidth: '5px',
     );
 
+    strokes.add(path);
     var pathEl = _addPath(path);
 
     var lastDraw = first;
@@ -78,23 +80,15 @@ class DrawingLayer extends Layer {
   }
 
   @override
-  int get layerType => 0;
-
-  @override
   void writeToBytes(BinaryWriter writer) {
-    writer.writeUInt8(layerType); // Layer type
-    writer.writeUInt16(_pathData.length);
-    for (var data in _pathData.values) {
-      data.writeToBytes(writer);
-    }
+    super.writeToBytes(writer);
   }
 
   @override
   void loadFromBytes(BinaryReader reader) {
-    var pathCount = reader.readUInt16();
-    for (var i = 0; i < pathCount; i++) {
-      var data = Stroke()..loadFromBytes(reader);
-      _addPath(data);
+    super.loadFromBytes(reader);
+    for (var stroke in strokes) {
+      _addPath(stroke);
     }
   }
 }

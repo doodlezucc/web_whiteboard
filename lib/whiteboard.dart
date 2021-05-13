@@ -3,19 +3,26 @@ import 'dart:convert';
 import 'dart:html';
 import 'dart:math';
 import 'dart:svg' as svg;
-import 'dart:typed_data';
 
 import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/util.dart';
+import 'package:web_whiteboard/whiteboard_data.dart';
 
-class Whiteboard {
+class Whiteboard with WhiteboardData {
+  static const modeDraw = 'draw';
+  static const modeText = 'text';
+
   final HtmlElement _container;
   final svg.SvgSvgElement root;
   final TextAreaElement textInput;
-  final _layers = <Layer>[];
+
+  bool eraser = false;
+  bool useShortcuts = true;
+
+  DrawingLayer get layer => layers[layerIndex];
 
   int _layerIndex = 0;
   int get layerIndex => _layerIndex;
@@ -31,20 +38,12 @@ class Whiteboard {
     }
   }
 
-  static const modeDraw = 'draw';
-  static const modeText = 'text';
-
   String _mode;
   String get mode => _mode;
   set mode(String mode) {
     _mode = mode;
     _container.setAttribute('mode', mode);
   }
-
-  bool eraser = false;
-  bool useShortcuts = true;
-
-  Layer get layer => _layers[layerIndex];
 
   Whiteboard(HtmlElement container, [TextAreaElement text])
       : _container = container,
@@ -63,62 +62,52 @@ class Whiteboard {
     _container.append(root);
   }
 
-  Uint8List saveToBytes() {
-    var writer = BinaryWriter();
-    writer.writeUInt16(_layers.length);
-    for (var layer in _layers) {
-      layer.writeToBytes(writer);
-    }
-    return writer.takeBytes();
-  }
-
-  void loadFromBytes(Uint8List bytes) {
-    clear();
-    var reader = BinaryReader(bytes.buffer);
+  @override
+  void loadFromBytes(BinaryReader reader) {
     var layerCount = reader.readUInt16();
     for (var i = 0; i < layerCount; i++) {
-      _addLayerType(reader.readUInt8()).loadFromBytes(reader);
+      layers.add(DrawingLayer(this)..loadFromBytes(reader));
+    }
+
+    var textCount = reader.readUInt16();
+    for (var i = 0; i < textCount; i++) {
+      texts.add(TextLayer(this)..loadFromBytes(reader));
     }
   }
 
-  Layer _addLayerType(int type) {
-    switch (type) {
-      case 0:
-        return addDrawingLayer();
-      case 1:
-        return addText();
-    }
-    return null;
+  String encode() {
+    var writer = BinaryWriter();
+    writeToBytes(writer);
+    return base64.encode(writer.takeBytes());
   }
 
-  String encode() => base64.encode(saveToBytes());
-  void decode(String data) => loadFromBytes(base64.decode(data));
-
-  void removeLayer(int index) {
-    _layers[index].dispose();
-    _layers.removeAt(index);
-    if (_layerIndex == index) {
-      layerIndex = index; // Yeah, this setter does something besides setting.
-    } else if (_layerIndex > index || index == _layers.length) {
-      layerIndex--;
-    }
+  void decode(String data) {
+    var reader = BinaryReader(base64.decode(data).buffer);
+    loadFromBytes(reader);
   }
 
-  DrawingLayer addDrawingLayer() => _addLayer(DrawingLayer(this));
+  DrawingLayer addDrawingLayer() {
+    var layer = DrawingLayer(this);
+    layers.add(layer);
+    return layer;
+  }
 
-  TextLayer addText() => _addLayer(TextLayer(this));
-
-  L _addLayer<L extends Layer>(L layer) {
-    _layers.add(layer);
-    layerIndex = _layers.length - 1;
+  TextLayer addText() {
+    var layer = TextLayer(this);
+    texts.add(layer);
     return layer;
   }
 
   void clear() {
-    for (var l in _layers) {
-      l.dispose();
+    for (var l in layers) {
+      (l as Layer).dispose();
     }
-    _layers.clear();
+    layers.clear();
+
+    for (var t in texts) {
+      (t as Layer).dispose();
+    }
+    texts.clear();
   }
 
   void _initDom() {
@@ -136,9 +125,7 @@ class Whiteboard {
     }
 
     textInput.onInput.listen((ev) {
-      if (layer is TextLayer) {
-        (layer as TextLayer).text = textInput.value;
-      }
+      print('BRUH');
     });
   }
 
@@ -155,14 +142,6 @@ class Whiteboard {
           case 'D':
             addDrawingLayer();
             return print('Added drawing layer');
-
-          case 'ArrowUp':
-            layerIndex = min(_layers.length - 1, layerIndex + 1);
-            return print('Layer: $layerIndex');
-
-          case 'ArrowDown':
-            layerIndex = max(0, layerIndex - 1);
-            return print('Layer: $layerIndex');
         }
       }
     });
@@ -180,7 +159,7 @@ class Whiteboard {
       startEvent.listen((ev) async {
         if (_isInput(ev.target)) return;
 
-        ev.preventDefault();
+        if (mode == modeText) ev.preventDefault();
         document.activeElement.blur();
         moveStreamCtrl = StreamController.broadcast();
         layer.onMouseDown(forceIntPoint(evToPoint(ev)), moveStreamCtrl.stream);

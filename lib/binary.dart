@@ -62,3 +62,8 @@ class BinaryReader {
     return s;
   }
 }
+
+mixin Serializable {
+  void writeToBytes(BinaryWriter writer);
+  void loadFromBytes(BinaryReader reader);
+}

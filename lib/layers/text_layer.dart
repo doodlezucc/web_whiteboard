@@ -1,23 +1,23 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
-import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/layers/text_data.dart';
+import 'package:web_whiteboard/util.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
-class TextLayer extends Layer {
+class TextLayer extends Layer with TextData {
   svg.TextElement get textElement => layerEl;
 
-  String _fontSize = '';
-  String get fontSize => _fontSize;
-  set fontSize(String fontSize) {
-    textElement.style.fontSize = fontSize.isNotEmpty ? fontSize : null;
-    _fontSize = fontSize;
+  @override
+  set fontSize(int fontSize) {
+    super.fontSize = fontSize;
+    textElement.style.fontSize = '${fontSize}px';
   }
 
-  String _text = 'Text';
-  String get text => _text;
+  @override
   set text(String text) {
+    super.text = text;
     textElement.children.clear();
 
     // Split text into separate tspan's because SVG doesn't
@@ -42,15 +42,12 @@ class TextLayer extends Layer {
 
       return span;
     }));
-
-    _text = text;
   }
 
-  Point<int> _position = Point(0, 0);
-  Point<int> get position => _position;
+  @override
   set position(Point position) {
-    var p = Point<int>(position.x, position.y);
-    _position = p;
+    var p = forceIntPoint(position);
+    super.position = p;
     textElement
       ..x.baseVal[0].value = p.x
       ..y.baseVal[0].value = p.y;
@@ -66,7 +63,7 @@ class TextLayer extends Layer {
     textElement
       ..x.baseVal.appendItem(_zeroLength)
       ..y.baseVal.appendItem(_zeroLength)
-      ..text = _text
+      ..text = text
       ..setAttribute('paint-order', 'stroke')
       ..setAttribute('text-anchor', 'middle')
       ..setAttribute('dominant-baseline', 'central');
@@ -77,22 +74,4 @@ class TextLayer extends Layer {
     position = first;
     stream.listen((p) => position = p);
   }
-
-  @override
-  void writeToBytes(BinaryWriter writer) {
-    writer.writeUInt8(layerType); // Layer type
-    writer.writePoint(position);
-    writer.writeString(fontSize);
-    writer.writeString(text);
-  }
-
-  @override
-  void loadFromBytes(BinaryReader reader) {
-    position = reader.readPoint();
-    fontSize = reader.readString();
-    text = reader.readString();
-  }
-
-  @override
-  int get layerType => 1;
 }
