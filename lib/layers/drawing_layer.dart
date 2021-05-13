@@ -1,16 +1,16 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
-import 'package:web_drawing/binary.dart';
-import 'package:web_drawing/layers/layer.dart';
-import 'package:web_drawing/stroke.dart';
-import 'package:web_drawing/util.dart';
-import 'package:web_drawing/web_drawing.dart';
+import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/layers/layer.dart';
+import 'package:web_whiteboard/stroke.dart';
+import 'package:web_whiteboard/util.dart';
+import 'package:web_whiteboard/whiteboard.dart';
 
 class DrawingLayer extends Layer {
   final _pathData = <svg.PathElement, Stroke>{};
 
-  DrawingLayer(DrawingCanvas canvas) : super(canvas, svg.GElement());
+  DrawingLayer(Whiteboard canvas) : super(canvas, svg.GElement());
 
   @override
   void onMouseDown(Point first, Stream<Point> stream) {

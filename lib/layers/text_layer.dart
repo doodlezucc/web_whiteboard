@@ -1,17 +1,17 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
-import 'package:web_drawing/binary.dart';
-import 'package:web_drawing/layers/layer.dart';
-import 'package:web_drawing/web_drawing.dart';
+import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/layers/layer.dart';
+import 'package:web_whiteboard/whiteboard.dart';
 
 class TextLayer extends Layer {
   svg.TextElement get textElement => layerEl;
 
-  String _fontSize = 'inherit';
+  String _fontSize = '';
   String get fontSize => _fontSize;
   set fontSize(String fontSize) {
-    textElement.style.fontSize = fontSize;
+    textElement.style.fontSize = fontSize.isNotEmpty ? fontSize : null;
     _fontSize = fontSize;
   }
 
@@ -48,19 +48,20 @@ class TextLayer extends Layer {
 
   Point<int> _position = Point(0, 0);
   Point<int> get position => _position;
-  set position(Point<int> position) {
-    _position = position;
+  set position(Point position) {
+    var p = Point<int>(position.x, position.y);
+    _position = p;
     textElement
-      ..x.baseVal[0].value = position.x
-      ..y.baseVal[0].value = position.y;
+      ..x.baseVal[0].value = p.x
+      ..y.baseVal[0].value = p.y;
     textElement.children
         .whereType<svg.TSpanElement>()
-        .forEach((span) => span.x.baseVal[0].value = position.x);
+        .forEach((span) => span.x.baseVal[0].value = p.x);
   }
 
   svg.Length _zeroLength;
 
-  TextLayer(DrawingCanvas canvas) : super(canvas, svg.TextElement()) {
+  TextLayer(Whiteboard canvas) : super(canvas, svg.TextElement()) {
     _zeroLength = canvas.root.createSvgLength()..value = 0;
     textElement
       ..x.baseVal.appendItem(_zeroLength)
@@ -80,8 +81,7 @@ class TextLayer extends Layer {
   @override
   void writeToBytes(BinaryWriter writer) {
     writer.writeUInt8(layerType); // Layer type
-    writer.writePoint(
-        Point(textElement.x.baseVal[0].value, textElement.y.baseVal[0].value));
+    writer.writePoint(position);
     writer.writeString(fontSize);
     writer.writeString(text);
   }

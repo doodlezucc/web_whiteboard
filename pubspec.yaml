@@ -1,5 +1,5 @@
-name: web_drawing
-description: An absolute bare-bones web app.
+name: web_whiteboard
+description: A whiteboard to draw on in the web.
 # version: 1.0.0
 #homepage: https://www.example.com
 

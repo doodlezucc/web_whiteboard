@@ -1,11 +1,11 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
-import 'package:web_drawing/binary.dart';
-import 'package:web_drawing/web_drawing.dart';
+import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/whiteboard.dart';
 
 abstract class Layer {
-  final DrawingCanvas canvas;
+  final Whiteboard canvas;
   final svg.SvgElement layerEl;
   bool visible = true;
   bool get isFocused => canvas.layer == this;

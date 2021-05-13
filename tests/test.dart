@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:test/test.dart';
-import 'package:web_drawing/binary.dart';
+import 'package:web_whiteboard/binary.dart';
 
 void main(List<String> args) {
   group('Binary I/O', () {

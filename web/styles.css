@@ -19,6 +19,15 @@ body {
   height: 100%;
 }
 
+#canvas[mode=text] text {
+  outline: 1px solid #0007;
+  cursor: text;
+}
+#canvas[mode=text] text:hover {
+  outline: 1px solid #000d;
+  cursor: text;
+}
+
 svg text {
   paint-order: stroke;
   stroke-linejoin: round;

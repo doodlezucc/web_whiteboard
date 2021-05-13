@@ -1,13 +1,20 @@
 import 'dart:html';
 import 'dart:js';
 
-import 'package:web_drawing/web_drawing.dart';
+import 'package:web_whiteboard/whiteboard.dart';
 
 void main() {
-  var canvas = DrawingCanvas(querySelector('#canvas'));
+  var canvas = Whiteboard(querySelector('#canvas'));
 
   window.onKeyDown.listen((ev) {
-    if (ev.ctrlKey) {
+    if (!ev.ctrlKey) {
+      if (ev.key == 'q') {
+        ev.preventDefault();
+        canvas.mode = canvas.mode == Whiteboard.modeDraw
+            ? Whiteboard.modeText
+            : Whiteboard.modeDraw;
+      }
+    } else {
       if (ev.key == 's') {
         ev.preventDefault();
         print(canvas.encode());

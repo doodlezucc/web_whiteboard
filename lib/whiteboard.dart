@@ -5,13 +5,14 @@ import 'dart:math';
 import 'dart:svg' as svg;
 import 'dart:typed_data';
 
-import 'package:web_drawing/binary.dart';
-import 'package:web_drawing/layers/drawing_layer.dart';
-import 'package:web_drawing/layers/layer.dart';
-import 'package:web_drawing/layers/text_layer.dart';
+import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/layers/drawing_layer.dart';
+import 'package:web_whiteboard/layers/layer.dart';
+import 'package:web_whiteboard/layers/text_layer.dart';
+import 'package:web_whiteboard/util.dart';
 
-class DrawingCanvas {
-  final HtmlElement container;
+class Whiteboard {
+  final HtmlElement _container;
   final svg.SvgSvgElement root;
   final TextAreaElement textInput;
   final _layers = <Layer>[];
@@ -30,24 +31,36 @@ class DrawingCanvas {
     }
   }
 
+  static const modeDraw = 'draw';
+  static const modeText = 'text';
+
+  String _mode;
+  String get mode => _mode;
+  set mode(String mode) {
+    _mode = mode;
+    _container.setAttribute('mode', mode);
+  }
+
   bool eraser = false;
   bool useShortcuts = true;
 
   Layer get layer => _layers[layerIndex];
 
-  DrawingCanvas(this.container, [TextAreaElement text])
-      : textInput = text ?? TextAreaElement(),
+  Whiteboard(HtmlElement container, [TextAreaElement text])
+      : _container = container,
+        textInput = text ?? TextAreaElement(),
         root = svg.SvgSvgElement() {
     _initDom();
     _initTextInput();
     _initCursorControls();
     _initKeyListener();
     addDrawingLayer();
+    mode = modeText;
 
     root
       ..width.baseVal.valueAsString = '100%'
       ..height.baseVal.valueAsString = '100%';
-    container.append(root);
+    _container.append(root);
   }
 
   Uint8List saveToBytes() {
@@ -73,7 +86,7 @@ class DrawingCanvas {
       case 0:
         return addDrawingLayer();
       case 1:
-        return addTextLayer();
+        return addText();
     }
     return null;
   }
@@ -93,7 +106,7 @@ class DrawingCanvas {
 
   DrawingLayer addDrawingLayer() => _addLayer(DrawingLayer(this));
 
-  TextLayer addTextLayer() => _addLayer(TextLayer(this));
+  TextLayer addText() => _addLayer(TextLayer(this));
 
   L _addLayer<L extends Layer>(L layer) {
     _layers.add(layer);
@@ -109,14 +122,14 @@ class DrawingCanvas {
   }
 
   void _initDom() {
-    if (container.style.position.isEmpty) {
-      container.style.position = 'relative';
+    if (_container.style.position.isEmpty) {
+      _container.style.position = 'relative';
     }
   }
 
   void _initTextInput() {
     if (!textInput.isConnected) {
-      container.append(textInput
+      _container.append(textInput
         ..style.position = 'absolute'
         ..style.zIndex = '10'
         ..placeholder = 'Text...');
@@ -129,11 +142,11 @@ class DrawingCanvas {
     });
   }
 
-  static bool isInput(Element e) => e is InputElement || e is TextAreaElement;
+  static bool _isInput(Element e) => e is InputElement || e is TextAreaElement;
 
   void _initKeyListener() {
     window.onKeyDown.listen((ev) {
-      if (useShortcuts && !isInput(ev.target)) {
+      if (useShortcuts && !_isInput(ev.target)) {
         switch (ev.key) {
           case 'e':
             eraser = !eraser;
@@ -143,10 +156,6 @@ class DrawingCanvas {
             addDrawingLayer();
             return print('Added drawing layer');
 
-          case 'T':
-            addTextLayer();
-            return print('Added text layer');
-
           case 'ArrowUp':
             layerIndex = min(_layers.length - 1, layerIndex + 1);
             return print('Layer: $layerIndex');
@@ -155,16 +164,12 @@ class DrawingCanvas {
             layerIndex = max(0, layerIndex - 1);
             return print('Layer: $layerIndex');
         }
-
-        if (layer is TextLayer && ev.keyCode == 13) {
-          textInput.focus();
-        }
       }
     });
   }
 
   void _initCursorControls() {
-    StreamController<Point> moveStreamCtrl;
+    StreamController<Point<int>> moveStreamCtrl;
 
     void listenToCursorEvents<T extends Event>(
       Point Function(T ev) evToPoint,
@@ -173,12 +178,12 @@ class DrawingCanvas {
       Stream<T> endEvent,
     ) {
       startEvent.listen((ev) async {
-        if (isInput(ev.target)) return;
+        if (_isInput(ev.target)) return;
 
         ev.preventDefault();
         document.activeElement.blur();
         moveStreamCtrl = StreamController.broadcast();
-        layer.onMouseDown(evToPoint(ev), moveStreamCtrl.stream);
+        layer.onMouseDown(forceIntPoint(evToPoint(ev)), moveStreamCtrl.stream);
 
         await endEvent.first;
         await moveStreamCtrl.close();
@@ -187,17 +192,20 @@ class DrawingCanvas {
 
       moveEvent.listen((ev) {
         if (moveStreamCtrl != null) {
-          moveStreamCtrl.add(evToPoint(ev));
+          moveStreamCtrl.add(forceIntPoint(evToPoint(ev)));
         }
       });
     }
 
-    listenToCursorEvents<MouseEvent>((ev) => ev.page - container.documentOffset,
-        container.onMouseDown, window.onMouseMove, window.onMouseUp);
+    listenToCursorEvents<MouseEvent>(
+        (ev) => ev.page - _container.documentOffset,
+        _container.onMouseDown,
+        window.onMouseMove,
+        window.onMouseUp);
 
     listenToCursorEvents<TouchEvent>(
-        (ev) => ev.targetTouches[0].page - container.documentOffset,
-        container.onTouchStart,
+        (ev) => ev.targetTouches[0].page - _container.documentOffset,
+        _container.onTouchStart,
         window.onTouchMove,
         window.onTouchEnd);
   }

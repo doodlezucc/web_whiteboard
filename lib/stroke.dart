@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:web_drawing/binary.dart';
+import 'package:web_whiteboard/binary.dart';
 
 class Stroke {
-  List<Point> points;
+  List<Point<int>> points;
   String stroke;
   String strokeWidth;
 
@@ -15,12 +15,12 @@ class Stroke {
     points ??= [];
   }
 
-  void add(Point p) => points.add(p);
+  void add(Point<int> p) => points.add(p);
 
   String toData() {
     if (points.isEmpty) return '';
 
-    String writePoint(Point p) {
+    String writePoint(Point<int> p) {
       return ' ${p.x} ${p.y}';
     }
 
