@@ -2,12 +2,18 @@ import 'dart:html';
 import 'dart:svg' as svg;
 
 import 'package:web_drawing/binary.dart';
-import 'package:web_drawing/font_styleable.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/web_drawing.dart';
 
 class TextLayer extends Layer {
   svg.TextElement get textElement => layerEl;
+
+  String _fontSize = 'inherit';
+  String get fontSize => _fontSize;
+  set fontSize(String fontSize) {
+    textElement.style.fontSize = fontSize;
+    _fontSize = fontSize;
+  }
 
   String _text = 'Text';
   String get text => _text;
@@ -73,37 +79,17 @@ class TextLayer extends Layer {
     writer.writeUInt8(layerType); // Layer type
     writer.writePoint(
         Point(textElement.x.baseVal[0].value, textElement.y.baseVal[0].value));
+    writer.writeString(fontSize);
     writer.writeString(text);
   }
 
   @override
   void loadFromBytes(BinaryReader reader) {
     move(reader.readPoint());
+    fontSize = reader.readString();
     text = reader.readString();
   }
 
   @override
   int get layerType => 1;
-}
-
-class StylizedTextLayer extends TextLayer with FontStyleable {
-  StylizedTextLayer(DrawingCanvas canvas) : super(canvas);
-
-  @override
-  CssStyleDeclaration get style => layerEl.style;
-
-  @override
-  int get layerType => 2;
-
-  @override
-  void writeToBytes(BinaryWriter writer) {
-    super.writeToBytes(writer);
-    writeStyleToBytes(writer);
-  }
-
-  @override
-  void loadFromBytes(BinaryReader reader) {
-    super.loadFromBytes(reader);
-    readStyleFromBytes(reader);
-  }
 }

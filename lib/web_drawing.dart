@@ -6,12 +6,11 @@ import 'dart:svg' as svg;
 import 'dart:typed_data';
 
 import 'package:web_drawing/binary.dart';
-import 'package:web_drawing/font_styleable.dart';
 import 'package:web_drawing/layers/drawing_layer.dart';
 import 'package:web_drawing/layers/layer.dart';
 import 'package:web_drawing/layers/text_layer.dart';
 
-class DrawingCanvas with FontStyleable {
+class DrawingCanvas {
   final HtmlElement container;
   final svg.SvgSvgElement root;
   final TextAreaElement textInput;
@@ -75,8 +74,6 @@ class DrawingCanvas with FontStyleable {
         return addDrawingLayer();
       case 1:
         return addTextLayer();
-      case 2:
-        return addTextLayerWithStyle();
     }
     return null;
   }
@@ -97,8 +94,6 @@ class DrawingCanvas with FontStyleable {
   DrawingLayer addDrawingLayer() => _addLayer(DrawingLayer(this));
 
   TextLayer addTextLayer() => _addLayer(TextLayer(this));
-  StylizedTextLayer addTextLayerWithStyle() =>
-      _addLayer(StylizedTextLayer(this));
 
   L _addLayer<L extends Layer>(L layer) {
     _layers.add(layer);
@@ -206,7 +201,4 @@ class DrawingCanvas with FontStyleable {
         window.onTouchMove,
         window.onTouchEnd);
   }
-
-  @override
-  CssStyleDeclaration get style => container.style;
 }
