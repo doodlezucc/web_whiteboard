@@ -85,10 +85,10 @@ class CustomAction extends Action {
   CustomAction(this.run, this.unrun);
 
   @override
-  void doAction() => run;
+  void doAction() => run();
 
   @override
-  void undoAction() => unrun;
+  void undoAction() => unrun();
 }
 
 abstract class MultipleAction<T> extends Action {

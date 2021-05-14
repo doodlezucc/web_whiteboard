@@ -172,9 +172,13 @@ class Whiteboard with WhiteboardData {
   }
 
   void _onTextSelect(Point<int> where, TextLayer text) {
-    selectedText = text;
-    _textInput.value = text.text;
-    _fontSizeInput.valueAsNumber = text.fontSize;
+    selectedText = text..focused = true;
+    _textInput
+      ..value = text.text
+      ..disabled = false;
+    _fontSizeInput
+      ..valueAsNumber = text.fontSize
+      ..disabled = false;
 
     var p = text.position;
 
@@ -188,6 +192,9 @@ class Whiteboard with WhiteboardData {
 
   void _onTextDeselect() {
     _textControls.classes.toggle('hidden', true);
+    _textInput.disabled = true;
+    _fontSizeInput.disabled = true;
+    selectedText?.focused = false;
     selectedText = null;
   }
 

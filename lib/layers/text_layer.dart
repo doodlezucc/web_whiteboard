@@ -11,6 +11,24 @@ import 'package:web_whiteboard/whiteboard.dart';
 class TextLayer extends Layer with TextData {
   svg.TextElement get textElement => layerEl;
 
+  bool _focused;
+  bool get focused => _focused;
+  set focused(bool focused) {
+    _focused = focused;
+    if (focused) {
+      _bufferedText = text;
+      _bufferedFontSize = fontSize;
+    } else {
+      if (text != _bufferedText || fontSize != _bufferedFontSize) {
+        canvas.history.registerDoneAction(TextUpdateAction(
+            this, _bufferedText, text, _bufferedFontSize, fontSize));
+      }
+    }
+  }
+
+  String _bufferedText;
+  int _bufferedFontSize;
+
   @override
   set fontSize(int fontSize) {
     super.fontSize = fontSize;
@@ -82,5 +100,27 @@ class TextLayer extends Layer with TextData {
 
     var endPos = await completer.future;
     return CustomAction(() => position = endPos, () => position = startPos);
+  }
+}
+
+class TextUpdateAction extends Action {
+  final TextLayer layer;
+  final String textA;
+  final String textB;
+  final int sizeA;
+  final int sizeB;
+
+  TextUpdateAction(this.layer, this.textA, this.textB, this.sizeA, this.sizeB);
+
+  @override
+  void doAction() {
+    layer.text = textB;
+    layer.fontSize = sizeB;
+  }
+
+  @override
+  void undoAction() {
+    layer.text = textA;
+    layer.fontSize = sizeA;
   }
 }
