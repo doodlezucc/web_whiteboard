@@ -131,3 +131,25 @@ abstract class AddRemoveAction<T> extends MultipleAction<T> {
 
   void onExecuted(bool forward);
 }
+
+abstract class SingleAddRemoveAction extends Action {
+  final bool forward;
+
+  SingleAddRemoveAction(this.forward);
+
+  @override
+  void doAction() {
+    forward ? create() : delete();
+    onExecuted(forward);
+  }
+
+  @override
+  void undoAction() {
+    forward ? delete() : create();
+    onExecuted(!forward);
+  }
+
+  void create();
+  void delete();
+  void onExecuted(bool forward);
+}

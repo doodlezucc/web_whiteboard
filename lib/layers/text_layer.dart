@@ -91,6 +91,7 @@ class TextLayer extends Layer with TextData {
 
   @override
   Future<Action> onMouseDown(Point first, Stream<Point> stream) async {
+    var isCreation = _bufferedText == null;
     var completer = Completer();
 
     var startPos = position;
@@ -99,6 +100,9 @@ class TextLayer extends Layer with TextData {
     }, onDone: () => completer.complete(position));
 
     var endPos = await completer.future;
+    if (isCreation) {
+      return TextInstanceAction(this, true);
+    }
     return CustomAction(() => position = endPos, () => position = startPos);
   }
 }
@@ -123,4 +127,25 @@ class TextUpdateAction extends Action {
     layer.text = textA;
     layer.fontSize = sizeA;
   }
+}
+
+class TextInstanceAction extends SingleAddRemoveAction {
+  final TextLayer layer;
+
+  TextInstanceAction(this.layer, bool forward) : super(forward);
+
+  @override
+  void create() {
+    layer.canvas.root.append(layer.layerEl);
+    layer.canvas.texts.add(layer);
+  }
+
+  @override
+  void delete() {
+    layer.dispose();
+    layer.canvas.texts.remove(layer);
+  }
+
+  @override
+  void onExecuted(bool forward) {}
 }
