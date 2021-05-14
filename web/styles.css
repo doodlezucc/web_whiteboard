@@ -32,3 +32,23 @@ svg text {
   paint-order: stroke;
   stroke-linejoin: round;
 }
+
+#whiteboardTextControls {
+  display: flex;
+  padding: 4px;
+  gap: 4px;
+  height: 30px;
+  transform: translate(-50%, -130%);
+  outline: 1px solid #aaa;
+  background-color: white;
+}
+
+#whiteboardTextControls > textarea, #whiteboardTextControls > input {
+  resize: none;
+  border: none;
+  outline: 1px solid #aaa;
+}
+
+#whiteboardTextControls > input {
+  width: 40px;
+}

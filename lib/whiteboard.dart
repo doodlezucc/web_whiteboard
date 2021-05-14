@@ -16,27 +16,19 @@ class Whiteboard with WhiteboardData {
   static const modeText = 'text';
 
   final HtmlElement _container;
-  final svg.SvgSvgElement root;
-  final TextAreaElement textInput;
+  final root = svg.SvgSvgElement();
+  final _textControls = DivElement();
+  final _textInput = TextAreaElement();
+  final _fontSizeInput = InputElement(type: 'number');
 
   bool eraser = false;
   bool useShortcuts = true;
 
   DrawingLayer get layer => layers[layerIndex];
 
-  int _layerIndex = 0;
-  int get layerIndex => _layerIndex;
-  set layerIndex(int layerIndex) {
-    _layerIndex = layerIndex;
+  int layerIndex = 0;
 
-    if (layer is TextLayer) {
-      textInput.value = (layer as TextLayer).text;
-      textInput.disabled = false;
-    } else {
-      textInput.value = '';
-      textInput.disabled = true;
-    }
-  }
+  TextLayer selectedText;
 
   String _mode;
   String get mode => _mode;
@@ -46,11 +38,9 @@ class Whiteboard with WhiteboardData {
   }
 
   Whiteboard(HtmlElement container, [TextAreaElement text])
-      : _container = container,
-        textInput = text ?? TextAreaElement(),
-        root = svg.SvgSvgElement() {
+      : _container = container {
     _initDom();
-    _initTextInput();
+    _initTextControls();
     _initCursorControls();
     _initKeyListener();
     addDrawingLayer();
@@ -114,18 +104,20 @@ class Whiteboard with WhiteboardData {
     if (_container.style.position.isEmpty) {
       _container.style.position = 'relative';
     }
+
+    _textControls
+      ..id = 'whiteboardTextControls'
+      ..style.position = 'absolute'
+      ..append(_textInput..placeholder = 'Text...')
+      ..append(_fontSizeInput..placeholder = 'Font size...');
   }
 
-  void _initTextInput() {
-    if (!textInput.isConnected) {
-      _container.append(textInput
-        ..style.position = 'absolute'
-        ..style.zIndex = '10'
-        ..placeholder = 'Text...');
-    }
-
-    textInput.onInput.listen((ev) {
-      print('BRUH');
+  void _initTextControls() {
+    _textInput.onInput.listen((ev) {
+      selectedText?.text = _textInput.value;
+    });
+    _fontSizeInput.onInput.listen((ev) {
+      selectedText?.fontSize = _fontSizeInput.valueAsNumber ?? 20;
     });
   }
 
@@ -147,6 +139,25 @@ class Whiteboard with WhiteboardData {
     });
   }
 
+  void _onTextSelect(Point<int> where, TextLayer text) {
+    selectedText = text;
+    _textInput.value = text.text;
+    _fontSizeInput.valueAsNumber = text.fontSize;
+
+    var p = text.position;
+
+    _container.append(_textControls
+      ..style.left = '${p.x}px'
+      ..style.top = '${p.y}px');
+
+    Future.delayed(Duration(milliseconds: 1), () => _textInput.focus());
+  }
+
+  void _onTextDeselect() {
+    _textControls.remove();
+    selectedText = null;
+  }
+
   void _initCursorControls() {
     StreamController<Point<int>> moveStreamCtrl;
 
@@ -156,13 +167,46 @@ class Whiteboard with WhiteboardData {
       Stream<T> moveEvent,
       Stream<T> endEvent,
     ) {
+      Point<int> fixedPoint(T ev) => forceIntPoint(evToPoint(ev));
+
       startEvent.listen((ev) async {
         if (_isInput(ev.target)) return;
 
-        if (mode == modeText) ev.preventDefault();
+        if (selectedText != null) {
+          if (!ev.path.any((e) => e == _textControls)) {
+            _onTextDeselect();
+          }
+          return;
+        }
+
+        if (mode == modeText) {
+          print(ev.path);
+          TextLayer toSelect;
+
+          if (ev.target is svg.TextElement) {
+            // User clicked on text object (probably)
+            for (TextLayer textObj in texts) {
+              if (textObj.textElement == ev.target) {
+                toSelect = textObj;
+                break;
+              }
+            }
+          } else {
+            // Create new text object
+            toSelect = addText()
+              ..text = 'Text'
+              ..position = fixedPoint(ev);
+          }
+
+          _onTextSelect(fixedPoint(ev), toSelect);
+
+          return;
+        }
+
+        ev.preventDefault();
         document.activeElement.blur();
         moveStreamCtrl = StreamController.broadcast();
-        layer.onMouseDown(forceIntPoint(evToPoint(ev)), moveStreamCtrl.stream);
+        layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream);
 
         await endEvent.first;
         await moveStreamCtrl.close();
@@ -171,7 +215,7 @@ class Whiteboard with WhiteboardData {
 
       moveEvent.listen((ev) {
         if (moveStreamCtrl != null) {
-          moveStreamCtrl.add(forceIntPoint(evToPoint(ev)));
+          moveStreamCtrl.add(fixedPoint(ev));
         }
       });
     }
