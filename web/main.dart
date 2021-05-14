@@ -7,6 +7,8 @@ void main() {
   var canvas = Whiteboard(querySelector('#canvas'));
 
   window.onKeyDown.listen((ev) {
+    if (ev.target is TextAreaElement) return;
+
     if (!ev.ctrlKey) {
       if (ev.key == 'q') {
         ev.preventDefault();

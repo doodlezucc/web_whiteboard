@@ -19,13 +19,16 @@ body {
   height: 100%;
 }
 
+#canvas text {
+  cursor: default;
+  user-select: none;
+}
 #canvas[mode=text] text {
   outline: 1px solid #0007;
   cursor: text;
 }
 #canvas[mode=text] text:hover {
   outline: 1px solid #000d;
-  cursor: text;
 }
 
 svg text {

@@ -35,6 +35,7 @@ class Whiteboard with WhiteboardData {
   set mode(String mode) {
     _mode = mode;
     _container.setAttribute('mode', mode);
+    _onTextDeselect();
   }
 
   Whiteboard(HtmlElement container, [TextAreaElement text])
@@ -174,37 +175,34 @@ class Whiteboard with WhiteboardData {
       startEvent.listen((ev) async {
         if (_isInput(ev.target)) return;
 
-        if (selectedText != null) {
-          if (!ev.path.any((e) => e == _textControls)) {
-            _onTextDeselect();
-          }
-          return;
-        }
+        Layer layer = this.layer;
 
         if (mode == modeText) {
-          TextLayer toSelect;
           var textTarget = ev.path
               .firstWhere((e) => e is svg.TextElement, orElse: () => null);
+
+          if (selectedText != null && textTarget == null) {
+            if (!ev.path.any((e) => e == _textControls)) {
+              _onTextDeselect();
+            }
+            return;
+          }
 
           if (textTarget != null) {
             // User clicked on text object (probably)
             for (TextLayer textObj in texts) {
               if (textObj.textElement == textTarget) {
-                toSelect = textObj;
+                layer = textObj;
                 break;
               }
             }
           } else {
             // Create new text object
-            toSelect = addText()
+            layer = addText()
               ..position = fixedPoint(ev)
               ..fontSize = defaultFontSize
               ..text = 'Text';
           }
-
-          _onTextSelect(fixedPoint(ev), toSelect);
-
-          return;
         }
 
         ev.preventDefault();
@@ -215,6 +213,8 @@ class Whiteboard with WhiteboardData {
         await endEvent.first;
         await moveStreamCtrl.close();
         moveStreamCtrl = null;
+
+        if (mode == modeText) _onTextSelect(fixedPoint(ev), layer);
       });
 
       moveEvent.listen((ev) {
