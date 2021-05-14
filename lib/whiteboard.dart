@@ -20,6 +20,7 @@ class Whiteboard with WhiteboardData {
   final _textControls = DivElement();
   final _textInput = TextAreaElement();
   final _fontSizeInput = InputElement(type: 'number');
+  final textRemoveButton = ButtonElement();
 
   bool eraser = false;
   bool useShortcuts = true;
@@ -46,11 +47,6 @@ class Whiteboard with WhiteboardData {
     _initKeyListener();
     addDrawingLayer();
     mode = modeText;
-
-    root
-      ..width.baseVal.valueAsString = '100%'
-      ..height.baseVal.valueAsString = '100%';
-    _container.append(root);
   }
 
   @override
@@ -112,7 +108,15 @@ class Whiteboard with WhiteboardData {
       ..append(_textInput..placeholder = 'Text...')
       ..append(SpanElement()
         ..text = 'Font size:'
-        ..append(_fontSizeInput));
+        ..append(_fontSizeInput)
+        ..append(textRemoveButton
+          ..text = 'Remove'
+          ..onClick.listen((_) => removeSelectedText())));
+
+    root
+      ..width.baseVal.valueAsString = '100%'
+      ..height.baseVal.valueAsString = '100%';
+    _container.append(root);
   }
 
   void _initTextControls() {
@@ -137,9 +141,21 @@ class Whiteboard with WhiteboardData {
           case 'D':
             addDrawingLayer();
             return print('Added drawing layer');
+
+          case 'Delete':
+          case 'Backspace':
+            return removeSelectedText();
         }
       }
     });
+  }
+
+  void removeSelectedText() {
+    if (selectedText != null) {
+      selectedText.dispose();
+      texts.remove(selectedText);
+      _onTextDeselect();
+    }
   }
 
   void _onTextSelect(Point<int> where, TextLayer text) {
@@ -173,7 +189,7 @@ class Whiteboard with WhiteboardData {
       Point<int> fixedPoint(T ev) => forceIntPoint(evToPoint(ev));
 
       startEvent.listen((ev) async {
-        if (_isInput(ev.target)) return;
+        if (_isInput(ev.target) || !ev.path.any((e) => e == root)) return;
 
         Layer layer = this.layer;
 
@@ -209,6 +225,8 @@ class Whiteboard with WhiteboardData {
         document.activeElement.blur();
         moveStreamCtrl = StreamController.broadcast();
         layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream);
+
+        _onTextDeselect();
 
         await endEvent.first;
         await moveStreamCtrl.close();

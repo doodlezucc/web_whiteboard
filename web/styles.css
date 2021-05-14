@@ -25,7 +25,7 @@ body {
 }
 #canvas[mode=text] text {
   outline: 1px solid #0007;
-  cursor: text;
+  cursor: move;
 }
 #canvas[mode=text] text:hover {
   outline: 1px solid #000d;
@@ -41,7 +41,7 @@ svg text {
   flex-direction: column;
   padding: 6px;
   gap: 6px;
-  transform: translate(-50%, -160%);
+  transform: translate(-50%, calc(-100% - 24px));
   background-color: white;
   box-shadow: 0 0 4px #0005;
 }
@@ -50,7 +50,6 @@ svg text {
   display: flex;
   gap: inherit;
   align-items: center;
-  justify-content: space-between;
 }
 
 #whiteboardTextControls textarea, #whiteboardTextControls input {
@@ -59,7 +58,15 @@ svg text {
   outline: 1px solid #aaa;
 }
 
+#whiteboardTextControls textarea {
+  width: 400px;
+  height: 60px;
+  overflow: auto;
+  white-space: nowrap;
+}
+
 #whiteboardTextControls input {
   padding: 4px;
-  width: auto;
+  width: 40px;
+  margin-right: auto;
 }
