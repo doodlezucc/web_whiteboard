@@ -13,7 +13,7 @@ abstract class Layer {
     canvas.root.append(layerEl);
   }
 
-  void onMouseDown(Point first, Stream<Point> moveStream);
+  void onMouseDown(Point<int> first, Stream<Point<int>> moveStream);
 
   void dispose() {
     layerEl.remove();

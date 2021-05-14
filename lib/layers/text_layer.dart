@@ -70,8 +70,10 @@ class TextLayer extends Layer with TextData {
   }
 
   @override
-  void onMouseDown(Point first, Stream<Point> stream) {
-    position = first;
-    stream.listen((p) => position = p);
+  void onMouseDown(Point<int> first, Stream<Point<int>> stream) {
+    var startPos = position;
+    stream.listen((p) {
+      position = startPos + (p - first);
+    });
   }
 }
