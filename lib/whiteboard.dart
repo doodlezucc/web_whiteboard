@@ -23,10 +23,10 @@ class Whiteboard with WhiteboardData {
 
   bool eraser = false;
   bool useShortcuts = true;
+  int layerIndex = 0;
+  int defaultFontSize = 20;
 
   DrawingLayer get layer => layers[layerIndex];
-
-  int layerIndex = 0;
 
   TextLayer selectedText;
 
@@ -109,7 +109,9 @@ class Whiteboard with WhiteboardData {
       ..id = 'whiteboardTextControls'
       ..style.position = 'absolute'
       ..append(_textInput..placeholder = 'Text...')
-      ..append(_fontSizeInput..placeholder = 'Font size...');
+      ..append(SpanElement()
+        ..text = 'Font size:'
+        ..append(_fontSizeInput));
   }
 
   void _initTextControls() {
@@ -195,8 +197,9 @@ class Whiteboard with WhiteboardData {
           } else {
             // Create new text object
             toSelect = addText()
-              ..text = 'Text'
-              ..position = fixedPoint(ev);
+              ..position = fixedPoint(ev)
+              ..fontSize = defaultFontSize
+              ..text = 'Text';
           }
 
           _onTextSelect(fixedPoint(ev), toSelect);

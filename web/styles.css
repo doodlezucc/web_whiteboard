@@ -43,14 +43,20 @@ svg text {
   box-shadow: 0 0 4px #0005;
 }
 
-#whiteboardTextControls > textarea, #whiteboardTextControls > input {
+#whiteboardTextControls span {
+  display: flex;
+  gap: inherit;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#whiteboardTextControls textarea, #whiteboardTextControls input {
   resize: none;
   border: none;
   outline: 1px solid #aaa;
-  font: inherit;
 }
 
-#whiteboardTextControls > input {
-  padding: 0 6px;
-  width: 30px;
+#whiteboardTextControls input {
+  padding: 4px;
+  width: auto;
 }
