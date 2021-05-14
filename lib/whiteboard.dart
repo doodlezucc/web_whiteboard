@@ -104,7 +104,6 @@ class Whiteboard with WhiteboardData {
 
     _textControls
       ..id = 'whiteboardTextControls'
-      ..style.position = 'absolute'
       ..append(_textInput..placeholder = 'Text...')
       ..append(SpanElement()
         ..text = 'Font size:'
@@ -220,6 +219,8 @@ class Whiteboard with WhiteboardData {
               ..fontSize = defaultFontSize
               ..text = 'Text';
           }
+          _onTextDeselect();
+          selectedText = layer;
         }
 
         ev.preventDefault();
@@ -227,13 +228,13 @@ class Whiteboard with WhiteboardData {
         moveStreamCtrl = StreamController.broadcast();
         layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream);
 
-        _onTextDeselect();
-
         await endEvent.first;
         await moveStreamCtrl.close();
         moveStreamCtrl = null;
 
-        if (mode == modeText) _onTextSelect(fixedPoint(ev), layer);
+        if (mode == modeText && layer.layerEl.isConnected) {
+          _onTextSelect(fixedPoint(ev), layer);
+        }
       });
 
       moveEvent.listen((ev) {
