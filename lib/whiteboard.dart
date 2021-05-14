@@ -244,22 +244,18 @@ class Whiteboard with WhiteboardData {
         var action = Completer();
         unawaited(
             layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream).then((a) {
-          print('Future done');
           action.complete(a);
         }));
 
         await endEvent.first;
         await moveStreamCtrl.close();
         moveStreamCtrl = null;
-        print('after await');
 
         if (mode == modeText && layer.layerEl.isConnected) {
           _onTextSelect(fixedPoint(ev), layer);
         }
 
-        print('register');
         history.registerDoneAction(await action.future);
-        print('good job');
       });
 
       moveEvent.listen((ev) {

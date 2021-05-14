@@ -77,8 +77,8 @@ class DrawingLayer extends Layer with DrawingData {
 
       for (svg.PathElement path in paths) {
         if (path.isPointInStroke(svgPoint)) {
-          _erase(path);
           erased.add(_pathData[path]);
+          _erase(path);
           changed = true;
         }
       }
