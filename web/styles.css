@@ -35,20 +35,22 @@ svg text {
 
 #whiteboardTextControls {
   display: flex;
-  padding: 4px;
-  gap: 4px;
-  height: 30px;
-  transform: translate(-50%, -130%);
-  outline: 1px solid #aaa;
+  flex-direction: column;
+  padding: 6px;
+  gap: 6px;
+  transform: translate(-50%, -160%);
   background-color: white;
+  box-shadow: 0 0 4px #0005;
 }
 
 #whiteboardTextControls > textarea, #whiteboardTextControls > input {
   resize: none;
   border: none;
   outline: 1px solid #aaa;
+  font: inherit;
 }
 
 #whiteboardTextControls > input {
-  width: 40px;
+  padding: 0 6px;
+  width: 30px;
 }

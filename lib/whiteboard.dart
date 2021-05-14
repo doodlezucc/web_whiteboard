@@ -180,13 +180,14 @@ class Whiteboard with WhiteboardData {
         }
 
         if (mode == modeText) {
-          print(ev.path);
           TextLayer toSelect;
+          var textTarget = ev.path
+              .firstWhere((e) => e is svg.TextElement, orElse: () => null);
 
-          if (ev.target is svg.TextElement) {
+          if (textTarget != null) {
             // User clicked on text object (probably)
             for (TextLayer textObj in texts) {
-              if (textObj.textElement == ev.target) {
+              if (textObj.textElement == textTarget) {
                 toSelect = textObj;
                 break;
               }
