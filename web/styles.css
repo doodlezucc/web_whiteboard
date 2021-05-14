@@ -44,6 +44,13 @@ svg text {
   transform: translate(-50%, calc(-100% - 24px));
   background-color: white;
   box-shadow: 0 0 4px #0005;
+  transition-property: opacity, transform;
+  transition-duration: 0.2s;
+}
+#whiteboardTextControls.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px));
 }
 
 #whiteboardTextControls span {

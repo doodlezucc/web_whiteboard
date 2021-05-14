@@ -116,7 +116,7 @@ class Whiteboard with WhiteboardData {
     root
       ..width.baseVal.valueAsString = '100%'
       ..height.baseVal.valueAsString = '100%';
-    _container.append(root);
+    _container..append(root)..append(_textControls);
   }
 
   void _initTextControls() {
@@ -165,15 +165,16 @@ class Whiteboard with WhiteboardData {
 
     var p = text.position;
 
-    _container.append(_textControls
+    _textControls
       ..style.left = '${p.x}px'
-      ..style.top = '${p.y}px');
+      ..style.top = '${p.y}px'
+      ..classes.toggle('hidden', false);
 
     Future.delayed(Duration(milliseconds: 1), () => _textInput.focus());
   }
 
   void _onTextDeselect() {
-    _textControls.remove();
+    _textControls.classes.toggle('hidden', true);
     selectedText = null;
   }
 
