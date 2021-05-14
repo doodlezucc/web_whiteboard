@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:html';
 import 'dart:svg' as svg;
 
+import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/text_data.dart';
 import 'package:web_whiteboard/util.dart';
 import 'package:web_whiteboard/layers/layer.dart';
@@ -70,10 +72,15 @@ class TextLayer extends Layer with TextData {
   }
 
   @override
-  void onMouseDown(Point<int> first, Stream<Point<int>> stream) {
+  Future<Action> onMouseDown(Point first, Stream<Point> stream) async {
+    var completer = Completer();
+
     var startPos = position;
     stream.listen((p) {
       position = startPos + (p - first);
-    });
+    }, onDone: () => completer.complete(position));
+
+    var endPos = await completer.future;
+    return CustomAction(() => position = endPos, () => position = startPos);
   }
 }

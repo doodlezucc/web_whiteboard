@@ -4,7 +4,9 @@ import 'dart:html';
 import 'dart:math';
 import 'dart:svg' as svg;
 
+import 'package:pedantic/pedantic.dart';
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
@@ -21,6 +23,7 @@ class Whiteboard with WhiteboardData {
   final _textInput = TextAreaElement();
   final _fontSizeInput = InputElement(type: 'number');
   final textRemoveButton = ButtonElement();
+  final history = History();
 
   bool eraser = false;
   bool useShortcuts = true;
@@ -145,6 +148,17 @@ class Whiteboard with WhiteboardData {
           case 'Backspace':
             return removeSelectedText();
         }
+
+        if (ev.ctrlKey) {
+          switch (ev.key) {
+            case 'z':
+              return history.undo();
+
+            case 'y':
+            case 'Z':
+              return history.redo();
+          }
+        }
       }
     });
   }
@@ -226,15 +240,26 @@ class Whiteboard with WhiteboardData {
         ev.preventDefault();
         document.activeElement.blur();
         moveStreamCtrl = StreamController.broadcast();
-        layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream);
+
+        var action = Completer();
+        unawaited(
+            layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream).then((a) {
+          print('Future done');
+          action.complete(a);
+        }));
 
         await endEvent.first;
         await moveStreamCtrl.close();
         moveStreamCtrl = null;
+        print('after await');
 
         if (mode == modeText && layer.layerEl.isConnected) {
           _onTextSelect(fixedPoint(ev), layer);
         }
+
+        print('register');
+        history.registerDoneAction(await action.future);
+        print('good job');
       });
 
       moveEvent.listen((ev) {

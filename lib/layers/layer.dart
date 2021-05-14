@@ -2,6 +2,7 @@ import 'dart:html';
 import 'dart:svg' as svg;
 
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
 abstract class Layer {
@@ -13,7 +14,7 @@ abstract class Layer {
     canvas.root.append(layerEl);
   }
 
-  void onMouseDown(Point<int> first, Stream<Point<int>> moveStream);
+  Future<Action> onMouseDown(Point<int> first, Stream<Point<int>> moveStream);
 
   void dispose() {
     layerEl.remove();

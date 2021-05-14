@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:html';
 import 'dart:svg' as svg;
 
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_data.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/stroke.dart';
@@ -14,11 +16,11 @@ class DrawingLayer extends Layer with DrawingData {
   DrawingLayer(Whiteboard canvas) : super(canvas, svg.GElement());
 
   @override
-  void onMouseDown(Point first, Stream<Point> stream) {
+  Future<Action> onMouseDown(Point first, Stream<Point> stream) {
     if (canvas.eraser) {
-      _handleEraseStream(first, stream);
+      return _handleEraseStream(first, stream);
     } else {
-      _handleDrawStream(first, stream);
+      return _handleDrawStream(first, stream);
     }
   }
 
@@ -30,7 +32,9 @@ class DrawingLayer extends Layer with DrawingData {
     return pathEl;
   }
 
-  void _handleDrawStream(Point first, Stream<Point> stream) {
+  Future<Action> _handleDrawStream(Point first, Stream<Point> stream) async {
+    var completer = Completer();
+
     var path = Stroke(
       points: [first],
       stroke: '#000000',
@@ -49,11 +53,21 @@ class DrawingLayer extends Layer with DrawingData {
         applyStroke(path, pathEl);
         lastDraw = p;
       }
-    });
+    }, onDone: completer.complete);
+
+    await completer.future;
+
+    return StrokeAction(this, true, [path]);
   }
 
-  void _handleEraseStream(Point first, Stream<Point> stream) {
+  void _erase(svg.PathElement pathEl) {
+    pathEl.remove();
+    strokes.remove(_pathData.remove(pathEl));
+  }
+
+  Future<Action> _handleEraseStream(Point first, Stream<Point> stream) async {
     var paths = List.from(layerEl.children);
+    var erased = <Stroke>[];
 
     void eraseAt(Point p) {
       var svgPoint = canvas.root.createSvgPoint()
@@ -63,8 +77,8 @@ class DrawingLayer extends Layer with DrawingData {
 
       for (svg.PathElement path in paths) {
         if (path.isPointInStroke(svgPoint)) {
-          path.remove();
-          _pathData.remove(path);
+          _erase(path);
+          erased.add(_pathData[path]);
           changed = true;
         }
       }
@@ -75,8 +89,9 @@ class DrawingLayer extends Layer with DrawingData {
     }
 
     eraseAt(first);
-
     stream.listen(eraseAt);
+
+    return StrokeAction(this, false, erased);
   }
 
   @override
@@ -91,4 +106,26 @@ class DrawingLayer extends Layer with DrawingData {
       _addPath(stroke);
     }
   }
+}
+
+class StrokeAction extends AddRemoveAction<Stroke> {
+  final DrawingLayer layer;
+
+  StrokeAction(this.layer, bool forward, Iterable<Stroke> list)
+      : super(forward, list);
+
+  @override
+  void doSingle(Stroke stroke) {
+    layer._addPath(stroke);
+    layer.strokes.add(stroke);
+  }
+
+  @override
+  void undoSingle(Stroke stroke) {
+    layer._erase(
+        layer._pathData.entries.firstWhere((n) => n.value == stroke).key);
+  }
+
+  @override
+  void onExecuted(bool forward) {}
 }
