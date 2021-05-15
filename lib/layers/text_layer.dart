@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:html';
 import 'dart:svg' as svg;
 
+import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/text_data.dart';
 import 'package:web_whiteboard/util.dart';
@@ -90,8 +91,14 @@ class TextLayer extends Layer with TextData {
   }
 
   @override
+  void loadFromBytes(BinaryReader reader) {
+    super.loadFromBytes(reader);
+    _bufferedText = text; // important for determining creation state at [1]
+  }
+
+  @override
   Future<Action> onMouseDown(Point first, Stream<Point> stream) async {
-    var isCreation = _bufferedText == null;
+    var isCreation = _bufferedText == null; // [1]
     var completer = Completer();
 
     var startPos = position;
