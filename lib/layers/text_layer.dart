@@ -7,6 +7,7 @@ import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/text_data.dart';
 import 'package:web_whiteboard/util.dart';
 import 'package:web_whiteboard/layers/layer.dart';
+import 'package:web_whiteboard/socket.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
 class TextLayer extends Layer with TextData {
@@ -125,50 +126,125 @@ class TextLayer extends Layer with TextData {
     if (creation) {
       return TextInstanceAction(this, endPos, true);
     }
-    return CustomAction(() => position = endPos, () => position = startPos);
+    return TextMoveAction(this, startPos, endPos);
   }
 }
 
-class TextUpdateAction extends Action {
-  final TextLayer layer;
+mixin TextAction on Action {
+  TextLayer _layer;
+  TextLayer get layer => _layer;
+}
+
+class TextMoveAction extends Action with TextAction {
+  final Point<int> posA;
+  final Point<int> posB;
+
+  TextMoveAction(TextLayer layer, this.posA, this.posB) {
+    _layer = layer;
+  }
+
+  @override
+  void doAction() {
+    layer.position = posB;
+    _send(true);
+  }
+
+  @override
+  void undoAction() {
+    layer.position = posA;
+    _send(false);
+  }
+
+  @override
+  void onSilentRegister() => _send(true);
+
+  void _send(bool forward) {
+    if (userCreated) {
+      layer.canvas.socket.send(
+          BinaryEvent(4, textLayer: layer)..writePoint(forward ? posB : posA));
+    }
+  }
+}
+
+class TextUpdateAction extends Action with TextAction {
   final String textA;
   final String textB;
   final int sizeA;
   final int sizeB;
 
-  TextUpdateAction(this.layer, this.textA, this.textB, this.sizeA, this.sizeB);
+  TextUpdateAction(
+      TextLayer layer, this.textA, this.textB, this.sizeA, this.sizeB) {
+    _layer = layer;
+  }
 
   @override
   void doAction() {
     layer.text = textB;
     layer.fontSize = sizeB;
+    _send(true);
   }
 
   @override
   void undoAction() {
     layer.text = textA;
     layer.fontSize = sizeA;
+    _send(false);
+  }
+
+  @override
+  void onSilentRegister() {
+    _send(true);
+  }
+
+  void _send(bool forward) {
+    if (userCreated) {
+      layer.canvas.socket.send(BinaryEvent(3, textLayer: layer)
+        ..writeUInt8(forward ? sizeB : sizeA)
+        ..writeString(forward ? textB : textA));
+    }
   }
 }
 
-class TextInstanceAction extends SingleAddRemoveAction {
-  final TextLayer layer;
+class TextInstanceAction extends SingleAddRemoveAction with TextAction {
   final Point<int> position;
 
-  TextInstanceAction(this.layer, this.position, bool forward) : super(forward);
+  TextInstanceAction(TextLayer layer, this.position, bool forward)
+      : super(forward) {
+    _layer = layer;
+  }
 
   @override
   void create() {
     layer.canvas.root.append(layer.layerEl);
     layer.canvas.texts.add(layer..position = position);
+    _sendCreate();
   }
 
   @override
   void delete() {
+    _sendDelete();
     layer.dispose();
     layer.canvas.texts.remove(layer);
   }
 
   @override
-  void onExecuted(bool forward) {}
+  void onSilentRegister() {
+    forward ? _sendCreate() : _sendDelete();
+  }
+
+  void _sendCreate() {
+    if (userCreated) {
+      layer.canvas.socket
+          .send(BinaryEvent(2, textLayer: layer, layerInclude: false)
+            ..writePoint(position)
+            ..writeUInt8(layer.fontSize)
+            ..writeString(layer.text));
+    }
+  }
+
+  void _sendDelete() {
+    if (userCreated) {
+      layer.canvas.socket.send(BinaryEvent(5, textLayer: layer));
+    }
+  }
 }

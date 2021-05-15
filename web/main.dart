@@ -5,6 +5,7 @@ import 'package:web_whiteboard/whiteboard.dart';
 
 void main() {
   var canvas = Whiteboard(querySelector('#canvas'));
+  var canvas2 = Whiteboard(querySelector('#canvasClone'))..useShortcuts = false;
 
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
@@ -36,5 +37,9 @@ void main() {
         canvas.clear();
       }
     }
+  });
+
+  canvas.socket.sendStream.listen((event) {
+    canvas2.socket.handleEvent(event);
   });
 }

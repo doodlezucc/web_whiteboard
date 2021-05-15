@@ -11,9 +11,11 @@ html, body {
 body {
   padding: 40px;
   box-sizing: border-box;
+  display: flex;
+  gap: 16px;
 }
 
-#canvas {
+#canvas, #canvasClone {
   box-shadow: 0 0 10px #0005;
   width: 100%;
   height: 100%;

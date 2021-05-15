@@ -11,6 +11,7 @@ import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/util.dart';
+import 'package:web_whiteboard/socket.dart';
 import 'package:web_whiteboard/whiteboard_data.dart';
 
 class Whiteboard with WhiteboardData {
@@ -24,6 +25,7 @@ class Whiteboard with WhiteboardData {
   final _fontSizeInput = InputElement(type: 'number');
   final textRemoveButton = ButtonElement();
   final history = History();
+  final socket = WhiteboardSocket();
 
   bool eraser = false;
   bool useShortcuts = true;
@@ -50,6 +52,7 @@ class Whiteboard with WhiteboardData {
     _initKeyListener();
     addDrawingLayer();
     mode = modeText;
+    socket.whiteboard = this;
   }
 
   @override

@@ -1,6 +1,7 @@
 abstract class Action {
   bool _isDone = false;
   bool get isDone => _isDone;
+  bool userCreated = true;
 
   void _run() {
     if (!isDone) {
@@ -18,6 +19,10 @@ abstract class Action {
 
   void doAction();
   void undoAction();
+
+  /// Triggered when this action is added to a history stack
+  /// or run in reaction to a redo.
+  void onSilentRegister() {}
 }
 
 class History {
@@ -37,6 +42,9 @@ class History {
 
     a._isDone = true;
     _registerAction(a);
+    if (a.userCreated) {
+      a.onSilentRegister();
+    }
     print('Registered $a');
   }
 
@@ -80,19 +88,6 @@ class History {
   }
 }
 
-class CustomAction extends Action {
-  final void Function() run;
-  final void Function() unrun;
-
-  CustomAction(this.run, this.unrun);
-
-  @override
-  void doAction() => run();
-
-  @override
-  void undoAction() => unrun();
-}
-
 abstract class MultipleAction<T> extends Action {
   final Iterable<T> list;
 
@@ -121,17 +116,20 @@ abstract class AddRemoveAction<T> extends MultipleAction<T> {
 
   @override
   void doAction() {
+    onBeforeExecute(forward);
     forward ? _addAll() : _removeAll();
     onExecuted(forward);
   }
 
   @override
   void undoAction() {
+    onBeforeExecute(!forward);
     forward ? _removeAll() : _addAll();
     onExecuted(!forward);
   }
 
-  void onExecuted(bool forward);
+  void onBeforeExecute(bool forward) {}
+  void onExecuted(bool forward) {}
 }
 
 abstract class SingleAddRemoveAction extends Action {
@@ -153,5 +151,5 @@ abstract class SingleAddRemoveAction extends Action {
 
   void create();
   void delete();
-  void onExecuted(bool forward);
+  void onExecuted(bool forward) {}
 }
