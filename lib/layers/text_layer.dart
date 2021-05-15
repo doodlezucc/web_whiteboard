@@ -15,6 +15,8 @@ class TextLayer extends Layer with TextData {
   bool _focused;
   bool get focused => _focused;
   set focused(bool focused) {
+    if (!textElement.isConnected) return;
+
     _focused = focused;
     if (focused) {
       _bufferedText = text;
@@ -96,9 +98,11 @@ class TextLayer extends Layer with TextData {
     _bufferedText = text; // important for determining creation state at [1]
   }
 
+  bool get isCreation => _bufferedText == null; // [1]
+
   @override
   Future<Action> onMouseDown(Point first, Stream<Point> stream) async {
-    var isCreation = _bufferedText == null; // [1]
+    var creation = isCreation;
     var completer = Completer();
 
     var startPos = position;
@@ -107,8 +111,19 @@ class TextLayer extends Layer with TextData {
     }, onDone: () => completer.complete(position));
 
     var endPos = await completer.future;
-    if (isCreation) {
-      return TextInstanceAction(this, true);
+
+    if (!textElement.isConnected) {
+      if (creation) {
+        // Text element was deleted before being placed
+        return null;
+      } else {
+        // Text element was deleted while dragging
+        return TextInstanceAction(this, startPos, false);
+      }
+    }
+
+    if (creation) {
+      return TextInstanceAction(this, endPos, true);
     }
     return CustomAction(() => position = endPos, () => position = startPos);
   }
@@ -138,13 +153,14 @@ class TextUpdateAction extends Action {
 
 class TextInstanceAction extends SingleAddRemoveAction {
   final TextLayer layer;
+  final Point<int> position;
 
-  TextInstanceAction(this.layer, bool forward) : super(forward);
+  TextInstanceAction(this.layer, this.position, bool forward) : super(forward);
 
   @override
   void create() {
     layer.canvas.root.append(layer.layerEl);
-    layer.canvas.texts.add(layer);
+    layer.canvas.texts.add(layer..position = position);
   }
 
   @override

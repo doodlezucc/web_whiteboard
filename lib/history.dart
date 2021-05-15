@@ -33,6 +33,8 @@ class History {
   }
 
   void registerDoneAction(Action a) {
+    if (a == null) return;
+
     a._isDone = true;
     _registerAction(a);
     print('Registered $a');

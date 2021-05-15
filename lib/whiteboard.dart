@@ -171,8 +171,11 @@ class Whiteboard with WhiteboardData {
 
   void removeSelectedText() {
     if (selectedText != null) {
-      selectedText.dispose();
-      texts.remove(selectedText);
+      var register = !selectedText.isCreation;
+      history.perform(
+        TextInstanceAction(selectedText, selectedText.position, false),
+        register,
+      );
       _onTextDeselect();
     }
   }
