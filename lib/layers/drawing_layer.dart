@@ -33,6 +33,9 @@ class DrawingLayer extends Layer with DrawingData {
   }
 
   Future<Action> _handleDrawStream(Point first, Stream<Point> stream) async {
+    // Prevent drawing new lines if limit of 255 strokes is reached
+    if (strokes.length >= 0xFF) return null;
+
     var completer = Completer();
 
     var path = Stroke(

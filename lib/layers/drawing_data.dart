@@ -6,7 +6,7 @@ class DrawingData implements Serializable {
 
   @override
   void writeToBytes(BinaryWriter writer) {
-    writer.writeUInt16(strokes.length);
+    writer.writeUInt8(strokes.length);
     for (var data in strokes) {
       data.writeToBytes(writer);
     }
@@ -14,7 +14,7 @@ class DrawingData implements Serializable {
 
   @override
   void loadFromBytes(BinaryReader reader) {
-    var pathCount = reader.readUInt16();
+    var pathCount = reader.readUInt8();
     for (var i = 0; i < pathCount; i++) {
       var data = Stroke()..loadFromBytes(reader);
       strokes.add(data);

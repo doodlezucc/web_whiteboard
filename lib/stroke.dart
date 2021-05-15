@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:web_whiteboard/binary.dart';
 
-class Stroke {
+class Stroke implements Serializable {
   List<Point<int>> points;
   String stroke;
   String strokeWidth;
@@ -15,7 +15,11 @@ class Stroke {
     points ??= [];
   }
 
-  void add(Point<int> p) => points.add(p);
+  void add(Point<int> p) {
+    // Limit amount of points to fit into a UInt16
+    if (points.length >= 0xFFFF) return;
+    points.add(p);
+  }
 
   String toData() {
     if (points.isEmpty) return '';
@@ -33,8 +37,9 @@ class Stroke {
     return s;
   }
 
+  @override
   void writeToBytes(BinaryWriter writer) {
-    writer.writeUInt32(points.length);
+    writer.writeUInt16(points.length);
     for (var p in points) {
       writer.writePoint(p);
     }
@@ -42,8 +47,9 @@ class Stroke {
     writer.writeString(strokeWidth);
   }
 
+  @override
   void loadFromBytes(BinaryReader reader) {
-    var count = reader.readUInt32();
+    var count = reader.readUInt16();
     for (var i = 0; i < count; i++) {
       points.add(reader.readPoint());
     }

@@ -54,12 +54,12 @@ class Whiteboard with WhiteboardData {
 
   @override
   void loadFromBytes(BinaryReader reader) {
-    var layerCount = reader.readUInt16();
+    var layerCount = reader.readUInt8();
     for (var i = 0; i < layerCount; i++) {
       layers.add(DrawingLayer(this)..loadFromBytes(reader));
     }
 
-    var textCount = reader.readUInt16();
+    var textCount = reader.readUInt8();
     for (var i = 0; i < textCount; i++) {
       texts.add(TextLayer(this)..loadFromBytes(reader));
     }
@@ -77,12 +77,18 @@ class Whiteboard with WhiteboardData {
   }
 
   DrawingLayer addDrawingLayer() {
+    // Limit amount of layers
+    if (layers.length >= 0xFF) return layers[0];
+
     var layer = DrawingLayer(this);
     layers.add(layer);
     return layer;
   }
 
   TextLayer addText() {
+    // Limit amount of texts
+    if (texts.length >= 0xFF) return texts[0];
+
     var layer = TextLayer(this);
     texts.add(layer);
     return layer;
