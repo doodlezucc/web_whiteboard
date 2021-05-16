@@ -12,6 +12,7 @@ body {
   padding: 40px;
   box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
@@ -19,11 +20,6 @@ body {
   box-shadow: 0 0 10px #0005;
   width: 100%;
   height: 100%;
-  background-image: url(https://i.pinimg.com/originals/cc/2a/28/cc2a2884782eca399299b3243ce66231.jpg);
-  background-position: center;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-color: black;
 }
 
 #canvas text {
@@ -36,6 +32,10 @@ body {
 }
 #canvas[mode=text] text:hover {
   outline: 1px solid #000d;
+}
+
+svg image {
+  background-repeat: no-repeat;
 }
 
 svg text {

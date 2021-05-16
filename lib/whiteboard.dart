@@ -20,6 +20,8 @@ class Whiteboard with WhiteboardData {
 
   final HtmlElement _container;
   final root = svg.SvgSvgElement();
+  final _img = ImageElement();
+  final _background = svg.ImageElement();
   final _textControls = DivElement();
   final _textInput = TextAreaElement();
   final _fontSizeInput = InputElement(type: 'number');
@@ -31,6 +33,7 @@ class Whiteboard with WhiteboardData {
   bool useShortcuts = true;
   int layerIndex = 0;
   int defaultFontSize = 20;
+  double _zoomCorrection = 1;
 
   DrawingLayer get layer => layers[layerIndex];
 
@@ -109,6 +112,25 @@ class Whiteboard with WhiteboardData {
     texts.clear();
   }
 
+  Future<void> changeBackground(String src) async {
+    _img.setAttribute('src', src);
+    await _img.onLoad.first;
+    _background.href.baseVal = src;
+    _updateScaling();
+  }
+
+  void _updateScaling() {
+    var w = _container.clientWidth;
+    var h = _container.clientHeight;
+    var zoomX = w / _img.naturalWidth;
+    var zoomY = h / _img.naturalHeight;
+    _zoomCorrection = min(zoomX, zoomY);
+
+    root.viewBox.baseVal
+      ..width = w / _zoomCorrection
+      ..height = h / _zoomCorrection;
+  }
+
   void _initDom() {
     if (_container.style.position.isEmpty) {
       _container.style.position = 'relative';
@@ -122,12 +144,14 @@ class Whiteboard with WhiteboardData {
         ..append(_fontSizeInput)
         ..append(textRemoveButton
           ..text = 'Remove'
-          ..onClick.listen((_) => removeSelectedText())));
+          ..onClick.listen((_) => _removeSelectedText())));
 
     root
       ..width.baseVal.valueAsString = '100%'
-      ..height.baseVal.valueAsString = '100%';
+      ..height.baseVal.valueAsString = '100%'
+      ..append(_background);
     _container..append(root)..append(_textControls);
+    window.onResize.listen((_) => _updateScaling());
   }
 
   void _initTextControls() {
@@ -155,7 +179,7 @@ class Whiteboard with WhiteboardData {
 
           case 'Delete':
           case 'Backspace':
-            return removeSelectedText();
+            return _removeSelectedText();
         }
 
         if (ev.ctrlKey) {
@@ -172,7 +196,7 @@ class Whiteboard with WhiteboardData {
     });
   }
 
-  void removeSelectedText() {
+  void _removeSelectedText() {
     if (selectedText != null) {
       var register = !selectedText.isCreation;
       history.perform(
@@ -219,7 +243,8 @@ class Whiteboard with WhiteboardData {
       Stream<T> moveEvent,
       Stream<T> endEvent,
     ) {
-      Point<int> fixedPoint(T ev) => forceIntPoint(evToPoint(ev));
+      Point<int> fixedPoint(T ev) =>
+          forceIntPoint(evToPoint(ev) * (1 / _zoomCorrection));
 
       startEvent.listen((ev) async {
         if (_isInput(ev.target) || !ev.path.any((e) => e == root)) return;
@@ -286,13 +311,13 @@ class Whiteboard with WhiteboardData {
 
     listenToCursorEvents<MouseEvent>(
         (ev) => ev.page - _container.documentOffset,
-        _container.onMouseDown,
+        root.onMouseDown,
         window.onMouseMove,
         window.onMouseUp);
 
     listenToCursorEvents<TouchEvent>(
         (ev) => ev.targetTouches[0].page - _container.documentOffset,
-        _container.onTouchStart,
+        root.onTouchStart,
         window.onTouchMove,
         window.onTouchEnd);
   }

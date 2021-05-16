@@ -4,8 +4,13 @@ import 'dart:js';
 import 'package:web_whiteboard/whiteboard.dart';
 
 void main() {
-  var canvas = Whiteboard(querySelector('#canvas'));
-  var canvas2 = Whiteboard(querySelector('#canvasClone'))..useShortcuts = false;
+  var src =
+      'https://i.pinimg.com/originals/cc/2a/28/cc2a2884782eca399299b3243ce66231.jpg';
+
+  var canvas = Whiteboard(querySelector('#canvas'))..changeBackground(src);
+  var canvas2 = Whiteboard(querySelector('#canvasClone'))
+    ..useShortcuts = false
+    ..changeBackground(src);
 
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
