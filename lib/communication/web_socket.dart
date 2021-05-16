@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/stroke.dart';
@@ -14,11 +15,8 @@ class WhiteboardSocket {
 
   Stream<Uint8List> get sendStream => _controller.stream;
 
-  WhiteboardSocket();
-
   void send(BinaryEvent event) {
     var bytes = event.takeBytes();
-    print(bytes);
     _controller.sink.add(bytes);
   }
 
@@ -26,11 +24,7 @@ class WhiteboardSocket {
     var reader = BinaryReader(bytes.buffer);
 
     DrawingLayer getLayer() => whiteboard.layers[reader.readUInt8()];
-    TextLayer getText() {
-      var i = reader.readUInt8();
-      print(i);
-      return whiteboard.texts[i];
-    }
+    TextLayer getText() => whiteboard.texts[reader.readUInt8()];
 
     switch (reader.readUInt8()) {
       case 0:
@@ -51,7 +45,6 @@ class WhiteboardSocket {
         var count = reader.readUInt8();
         for (var i = 0; i < count; i++) {
           var index = reader.readUInt8();
-          print('$i | $index');
           toRemove.add(layer.strokes[index]);
         }
         whiteboard.history.perform(
@@ -100,41 +93,4 @@ class WhiteboardSocket {
 
     return false;
   }
-}
-
-class BinaryEvent extends BinaryWriter {
-  final int id;
-  final EventContext context;
-
-  BinaryEvent(
-    this.id, {
-    DrawingLayer drawingLayer,
-    TextLayer textLayer,
-    bool layerInclude = true,
-  }) : context =
-            EventContext(drawingLayer: drawingLayer, textLayer: textLayer) {
-    writeUInt8(id);
-
-    if (layerInclude) {
-      if (drawingLayer != null) {
-        writeLayerIndex();
-      } else if (textLayer != null) {
-        writeTextIndex();
-      }
-    }
-  }
-
-  void writeLayerIndex() =>
-      writeUInt8(context.whiteboard.layers.indexOf(context.drawingLayer));
-  void writeTextIndex() =>
-      writeUInt8(context.whiteboard.texts.indexOf(context.textLayer));
-}
-
-class EventContext {
-  final Whiteboard whiteboard;
-  final DrawingLayer drawingLayer;
-  final TextLayer textLayer;
-
-  EventContext({this.drawingLayer, this.textLayer})
-      : whiteboard = drawingLayer?.canvas ?? textLayer?.canvas;
 }

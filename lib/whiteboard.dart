@@ -11,7 +11,7 @@ import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/util.dart';
-import 'package:web_whiteboard/socket.dart';
+import 'package:web_whiteboard/communication/web_socket.dart';
 import 'package:web_whiteboard/whiteboard_data.dart';
 
 class Whiteboard with WhiteboardData {

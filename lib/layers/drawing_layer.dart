@@ -3,12 +3,12 @@ import 'dart:html';
 import 'dart:svg' as svg;
 
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_data.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/util.dart';
-import 'package:web_whiteboard/socket.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
 class DrawingLayer extends Layer with DrawingData {
