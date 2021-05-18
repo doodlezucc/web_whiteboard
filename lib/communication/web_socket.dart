@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html';
 
 import 'dart:typed_data';
 
@@ -20,7 +21,11 @@ class WhiteboardSocket {
     _controller.sink.add(bytes);
   }
 
-  bool handleEvent(Uint8List bytes) {
+  Future<bool> handleEvent(Blob blob) async {
+    return handleEventBytes(await blobToBytes(blob));
+  }
+
+  bool handleEventBytes(Uint8List bytes) {
     var reader = BinaryReader(bytes.buffer);
 
     DrawingLayer getLayer() => whiteboard.layers[reader.readUInt8()];
@@ -93,4 +98,11 @@ class WhiteboardSocket {
 
     return false;
   }
+}
+
+Future<Uint8List> blobToBytes(Blob blob) async {
+  var reader = FileReader();
+  reader.readAsArrayBuffer(blob);
+  await reader.onLoadEnd.first;
+  return reader.result;
 }

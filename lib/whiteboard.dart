@@ -58,6 +58,12 @@ class Whiteboard with WhiteboardData {
     socket.whiteboard = this;
   }
 
+  Future<void> loadFromBlob(Blob blob) async {
+    var bytes = await blobToBytes(blob);
+    print(bytes);
+    loadFromBytes(BinaryReader(bytes.buffer));
+  }
+
   @override
   void loadFromBytes(BinaryReader reader) {
     var layerCount = reader.readUInt8();

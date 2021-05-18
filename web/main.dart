@@ -45,6 +45,6 @@ void main() {
   });
 
   canvas.socket.sendStream.listen((event) {
-    canvas2.socket.handleEvent(event);
+    canvas2.socket.handleEventBytes(event);
   });
 }

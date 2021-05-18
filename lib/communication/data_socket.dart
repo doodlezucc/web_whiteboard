@@ -11,8 +11,9 @@ class WhiteboardDataSocket {
 
   WhiteboardDataSocket(this.whiteboard);
 
-  bool handleEvent(Uint8List bytes) {
-    var reader = BinaryReader(bytes.buffer);
+  bool handleEvent(data) {
+    var bytes = Uint8List.fromList(data);
+    var reader = BinaryReader.fromList(bytes);
 
     DrawingData getLayer() => whiteboard.layers[reader.readUInt8()];
     TextData getText() => whiteboard.texts[reader.readUInt8()];
