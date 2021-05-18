@@ -45,17 +45,14 @@ class History {
     if (a.userCreated) {
       a.onSilentRegister();
     }
-    print('Registered $a');
   }
 
   void _registerAction(Action a) {
     if (_actionsDone < _stack.length) {
-      print('discarding actions');
       _stack.removeRange(_actionsDone, _stack.length);
     }
     _stack.add(a);
     if (!a._isDone) {
-      print('Doing $a');
       a._run();
     }
     _actionsDone++;
@@ -63,21 +60,15 @@ class History {
 
   void undo() {
     if (_actionsDone > 0) {
-      print('Undoing ${_stack[_actionsDone - 1]}');
       _stack[_actionsDone - 1]._unrun();
       _actionsDone--;
-    } else {
-      print('No actions to undo');
     }
   }
 
   void redo() {
     if (_actionsDone < _stack.length) {
-      print('Redoing');
       _stack[_actionsDone]._run();
       _actionsDone++;
-    } else {
-      print('No actions to redo');
     }
   }
 

@@ -17,9 +17,7 @@ class Connection {
     stream.listen(
       (data) {
         // If data is a whiteboard event, forward it to other connections
-        print('have data');
         if (whiteboardSocket.handleEvent(data)) {
-          print('got handled');
           for (var connection in connections) {
             if (connection != this) {
               connection.send(data);

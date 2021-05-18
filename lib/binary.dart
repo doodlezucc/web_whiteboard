@@ -41,10 +41,7 @@ class BinaryReader {
 
   BinaryReader(ByteBuffer buffer) : data = buffer.asByteData();
   BinaryReader.fromList(Uint8List bytes)
-      : data = bytes.buffer.asByteData(bytes.offsetInBytes) {
-    print(data);
-    print(data.buffer.asUint8List(bytes.offsetInBytes));
-  }
+      : data = bytes.buffer.asByteData(bytes.offsetInBytes);
 
   int _read(int result, int bytes) {
     offset += bytes;

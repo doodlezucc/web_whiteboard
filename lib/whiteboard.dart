@@ -60,7 +60,6 @@ class Whiteboard with WhiteboardData {
 
   Future<void> loadFromBlob(Blob blob) async {
     var bytes = await blobToBytes(blob);
-    print(bytes);
     loadFromBytes(BinaryReader(bytes.buffer));
   }
 

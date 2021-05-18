@@ -24,7 +24,6 @@ class ClientWebsocket {
 
   Future<void> send(data) async {
     await _waitForOpen.future;
-    print('Sending');
     _webSocket.send(data);
   }
 }
