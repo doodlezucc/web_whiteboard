@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/layers/drawing_data.dart';
 import 'package:web_whiteboard/layers/text_data.dart';
@@ -29,5 +31,13 @@ class WhiteboardData implements Serializable {
     for (var text in texts) {
       text.writeToBytes(writer);
     }
+  }
+
+  void fromBytes(Uint8List bytes) => loadFromBytes(BinaryReader(bytes.buffer));
+
+  Uint8List toBytes() {
+    var writer = BinaryWriter();
+    writeToBytes(writer);
+    return writer.takeBytes();
   }
 }

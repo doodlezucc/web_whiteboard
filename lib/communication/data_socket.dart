@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:web_whiteboard/binary.dart';
@@ -8,10 +7,9 @@ import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/whiteboard_data.dart';
 
 class WhiteboardDataSocket {
-  WhiteboardData whiteboard;
-  final _controller = StreamController<Uint8List>.broadcast();
+  final WhiteboardData whiteboard;
 
-  Stream<Uint8List> get sendStream => _controller.stream;
+  WhiteboardDataSocket(this.whiteboard);
 
   bool handleEvent(Uint8List bytes) {
     var reader = BinaryReader(bytes.buffer);
