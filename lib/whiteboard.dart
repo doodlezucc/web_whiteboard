@@ -9,6 +9,7 @@ import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/layer.dart';
+import 'package:web_whiteboard/layers/pin_layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/util.dart';
 import 'package:web_whiteboard/communication/web_socket.dart';
@@ -17,6 +18,7 @@ import 'package:web_whiteboard/whiteboard_data.dart';
 class Whiteboard with WhiteboardData {
   static const modeDraw = 'draw';
   static const modeText = 'text';
+  static const modePin = 'pin';
 
   final HtmlElement _container;
   final root = svg.SvgSvgElement();
@@ -30,7 +32,7 @@ class Whiteboard with WhiteboardData {
   final socket = WhiteboardSocket();
 
   bool eraser = false;
-  bool useShortcuts = true;
+  bool captureInput = true;
   int layerIndex = 0;
   int defaultFontSize = 20;
   double _zoomCorrection = 1;
@@ -54,7 +56,8 @@ class Whiteboard with WhiteboardData {
     _initCursorControls();
     _initKeyListener();
     addDrawingLayer();
-    mode = modeText;
+    mode = modePin;
+    pin = PinLayer(this);
     socket
       ..whiteboard = this
       ..prefix = webSocketPrefix;
@@ -174,18 +177,12 @@ class Whiteboard with WhiteboardData {
 
   void _initKeyListener() {
     window.onKeyDown.listen((ev) {
-      if (useShortcuts && !_isInput(ev.target)) {
+      if (captureInput && !_isInput(ev.target)) {
         switch (ev.key) {
-          case 'e':
-            eraser = !eraser;
-            return print('Eraser: $eraser');
-
-          case 'D':
-            addDrawingLayer();
-            return print('Added drawing layer');
-
           case 'Delete':
           case 'Backspace':
+            if (mode == modePin) return (pin as PinLayer).hide();
+
             return _removeSelectedText();
         }
 
@@ -254,9 +251,11 @@ class Whiteboard with WhiteboardData {
           forceIntPoint(evToPoint(ev) * (1 / _zoomCorrection));
 
       startEvent.listen((ev) async {
-        if (_isInput(ev.target) || !ev.path.any((e) => e == root)) return;
+        if (!captureInput ||
+            _isInput(ev.target) ||
+            !ev.path.any((e) => e == root)) return;
 
-        Layer layer = this.layer;
+        Layer layer = mode == modeDraw ? this.layer : (pin as PinLayer);
 
         if (mode == modeText) {
           var textTarget = ev.path

@@ -33,6 +33,8 @@ class BinaryWriter {
     writeUInt16(bytes.length);
     builder.add(bytes);
   }
+
+  void writeBool(bool b) => writeUInt8(b ? 1 : 0);
 }
 
 class BinaryReader {
@@ -47,6 +49,8 @@ class BinaryReader {
     offset += bytes;
     return result;
   }
+
+  bool readBool() => readUInt8() != 0;
 
   int readUInt8() => _read(data.getUint8(offset), 1);
   int readUInt16() => _read(data.getUint16(offset), 2);

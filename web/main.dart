@@ -9,7 +9,7 @@ void main() {
 
   var canvas = Whiteboard(querySelector('#canvas'))..changeBackground(src);
   var canvas2 = Whiteboard(querySelector('#canvasClone'))
-    ..useShortcuts = false
+    ..captureInput = false
     ..changeBackground(src);
 
   window.onKeyDown.listen((ev) {

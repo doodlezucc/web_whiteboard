@@ -104,6 +104,10 @@ class WhiteboardSocket extends SocketBase {
             TextInstanceAction(getText(), null, false)..userCreated = false,
             false);
         return true;
+
+      case 6:
+        whiteboard.pin.loadFromBytes(reader);
+        return true;
     }
 
     return false;

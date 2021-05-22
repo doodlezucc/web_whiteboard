@@ -64,6 +64,10 @@ class WhiteboardDataSocket extends SocketBase {
       case 5:
         whiteboard.texts.remove(getText());
         return true;
+
+      case 6:
+        whiteboard.pin.loadFromBytes(reader);
+        return true;
     }
 
     return false;

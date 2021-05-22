@@ -34,6 +34,23 @@ body {
   outline: 1px solid #000d;
 }
 
+#whiteboardPin {
+  fill: #fffa;
+  stroke: black;
+  stroke-width: 2px;
+  animation: pin-pulse 4s ease-in-out infinite;
+  opacity: 0;
+}
+#whiteboardPin.visible {
+  opacity: 1;
+}
+
+@keyframes pin-pulse {
+    0% { r: 10 }
+   50% { r: 15 }
+  100% { r: 10 }
+}
+
 svg image {
   background-repeat: no-repeat;
 }
