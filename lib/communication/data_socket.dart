@@ -1,18 +1,24 @@
 import 'dart:typed_data';
 
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/communication/socket_base.dart';
 import 'package:web_whiteboard/layers/drawing_data.dart';
 import 'package:web_whiteboard/layers/text_data.dart';
 import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/whiteboard_data.dart';
 
-class WhiteboardDataSocket {
+class WhiteboardDataSocket extends SocketBase {
   final WhiteboardData whiteboard;
 
-  WhiteboardDataSocket(this.whiteboard);
+  /// `prefix` may define a string prepended to incoming and outgoing events.
+  /// Keep it unique so whiteboard messages don't mix up with other traffic
+  /// on your websocket.
+  WhiteboardDataSocket(this.whiteboard, {String prefix = ''}) : super(prefix);
 
-  bool handleEvent(data) {
-    var bytes = Uint8List.fromList(data);
+  bool handleEvent(List<int> data) {
+    if (!matchPrefix(data)) return false;
+
+    var bytes = Uint8List.fromList(data.sublist(prefixBytes.length));
     var reader = BinaryReader.fromList(bytes);
 
     DrawingData getLayer() => whiteboard.layers[reader.readUInt8()];

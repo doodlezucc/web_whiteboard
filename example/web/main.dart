@@ -8,7 +8,7 @@ final clientSocket = ClientWebsocket();
 
 const src =
     'https://i.pinimg.com/originals/cc/2a/28/cc2a2884782eca399299b3243ce66231.jpg';
-final whiteboard = Whiteboard(querySelector('#canvas'))
+final whiteboard = Whiteboard(querySelector('#canvas'), webSocketPrefix: '%wb')
   ..changeBackground(src)
   ..socket.sendStream.listen((data) => clientSocket.send(data));
 

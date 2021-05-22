@@ -15,8 +15,10 @@ import 'websockets.dart';
 // For Google Cloud Run, set _hostname to '0.0.0.0'.
 const _hostname = 'localhost';
 
-final whiteboardSocket =
-    WhiteboardDataSocket(WhiteboardData()..layers.add(DrawingData()));
+final whiteboardSocket = WhiteboardDataSocket(
+  WhiteboardData()..layers.add(DrawingData()),
+  prefix: '%wb',
+);
 
 void main(List<String> args) async {
   var parser = ArgParser()..addOption('port', abbr: 'p');
@@ -71,24 +73,16 @@ Future<Response> _echoRequest(Request request) async {
     path = 'index.html';
   }
 
-  var file = path.startsWith('database')
-      ? File(path)
-      : (path.startsWith('game')
-          ? File('web/' + path.substring(5))
-          : File('web/' + path));
+  var file = File('web/' + path);
 
-  if (!await file.exists()) {
-    if (!path.startsWith('game/') && path.isNotEmpty) {
-      return Response.notFound('Request for "${request.url}"');
-    }
-
-    file = File('web/index.html');
+  if (await file.exists()) {
+    var type = getMimeType(file);
+    return Response(
+      200,
+      body: file.openRead(),
+      headers: {'Content-Type': type},
+    );
   }
 
-  var type = getMimeType(file);
-  return Response(
-    200,
-    body: file.openRead(),
-    headers: {'Content-Type': type},
-  );
+  return Response.notFound('Request for "${request.url}"');
 }

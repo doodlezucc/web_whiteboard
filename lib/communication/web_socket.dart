@@ -5,28 +5,38 @@ import 'dart:typed_data';
 
 import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/communication/binary_event.dart';
+import 'package:web_whiteboard/communication/socket_base.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
-class WhiteboardSocket {
+class WhiteboardSocket extends SocketBase {
   Whiteboard whiteboard;
   final _controller = StreamController<Uint8List>.broadcast();
 
   Stream<Uint8List> get sendStream => _controller.stream;
 
+  /// `prefix` may define a string prepended to incoming and outgoing events.
+  /// Keep it unique so whiteboard messages don't mix up with other traffic
+  /// on your websocket.
+  WhiteboardSocket({this.whiteboard, String prefix = ''}) : super(prefix);
+
   void send(BinaryEvent event) {
-    var bytes = event.takeBytes();
+    var bytes = Uint8List.fromList(prefixBytes + event.takeBytes());
     _controller.sink.add(bytes);
   }
 
+  /// Returns true if `blob` starts with the socket prefix
+  /// and the event was handled successfully.
   Future<bool> handleEvent(Blob blob) async {
     return handleEventBytes(await blobToBytes(blob));
   }
 
   bool handleEventBytes(Uint8List bytes) {
-    var reader = BinaryReader(bytes.buffer);
+    if (!matchPrefix(bytes)) return false;
+
+    var reader = BinaryReader(bytes.sublist(prefixBytes.length).buffer);
 
     DrawingLayer getLayer() => whiteboard.layers[reader.readUInt8()];
     TextLayer getText() => whiteboard.texts[reader.readUInt8()];

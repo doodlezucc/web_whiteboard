@@ -23,6 +23,9 @@ class Connection {
               connection.send(data);
             }
           }
+        } else {
+          print('Unhandled data:');
+          print(data);
         }
       },
       onDone: () {

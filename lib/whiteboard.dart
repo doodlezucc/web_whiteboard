@@ -47,7 +47,7 @@ class Whiteboard with WhiteboardData {
     _onTextDeselect();
   }
 
-  Whiteboard(HtmlElement container, [TextAreaElement text])
+  Whiteboard(HtmlElement container, {String webSocketPrefix = ''})
       : _container = container {
     _initDom();
     _initTextControls();
@@ -55,7 +55,9 @@ class Whiteboard with WhiteboardData {
     _initKeyListener();
     addDrawingLayer();
     mode = modeText;
-    socket.whiteboard = this;
+    socket
+      ..whiteboard = this
+      ..prefix = webSocketPrefix;
   }
 
   Future<void> loadFromBlob(Blob blob) async {
