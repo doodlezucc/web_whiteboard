@@ -126,10 +126,13 @@ class Whiteboard with WhiteboardData {
     _img.setAttribute('src', src);
     await _img.onLoad.first;
     _background.href.baseVal = src;
-    _updateScaling();
+    updateScaling();
   }
 
-  void _updateScaling() {
+  /// Resizes the SVG viewbox to optimal size.
+  /// This is run on every window resize event
+  /// but may be called at any time.
+  void updateScaling() {
     var w = _container.clientWidth;
     var h = _container.clientHeight;
     var zoomX = w / _img.naturalWidth;
@@ -161,7 +164,7 @@ class Whiteboard with WhiteboardData {
       ..height.baseVal.valueAsString = '100%'
       ..append(_background);
     _container..append(root)..append(_textControls);
-    window.onResize.listen((_) => _updateScaling());
+    window.onResize.listen((_) => updateScaling());
   }
 
   void _initTextControls() {
