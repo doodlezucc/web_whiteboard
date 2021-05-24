@@ -314,7 +314,9 @@ class Whiteboard with WhiteboardData {
       });
 
       moveEvent.listen((ev) {
-        if (moveStreamCtrl != null) {
+        if (moveStreamCtrl != null &&
+            !(mode == modeText &&
+                !(ev as dynamic).path.any((e) => e == root))) {
           moveStreamCtrl.add(fixedPoint(ev));
         }
       });
