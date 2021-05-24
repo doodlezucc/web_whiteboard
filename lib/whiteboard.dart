@@ -56,7 +56,7 @@ class Whiteboard with WhiteboardData {
     _initCursorControls();
     _initKeyListener();
     addDrawingLayer();
-    mode = modeText;
+    mode = modePin;
     pin = PinLayer(this);
     socket
       ..whiteboard = this
@@ -79,6 +79,8 @@ class Whiteboard with WhiteboardData {
     for (var i = 0; i < textCount; i++) {
       texts.add(TextLayer(this)..loadFromBytes(reader));
     }
+
+    pin.loadFromBytes(reader);
   }
 
   String encode() {
