@@ -56,7 +56,7 @@ class Whiteboard with WhiteboardData {
     _initCursorControls();
     _initKeyListener();
     addDrawingLayer();
-    mode = modePin;
+    mode = modeText;
     pin = PinLayer(this);
     socket
       ..whiteboard = this
@@ -214,7 +214,7 @@ class Whiteboard with WhiteboardData {
     }
   }
 
-  void _onTextSelect(Point<int> where, TextLayer text) {
+  void _onTextSelect(TextLayer text) {
     selectedText = text..focused = true;
     _textInput
       ..value = text.text
@@ -223,7 +223,7 @@ class Whiteboard with WhiteboardData {
       ..valueAsNumber = text.fontSize
       ..disabled = false;
 
-    var p = text.position;
+    var p = forceDoublePoint(text.position) * _zoomCorrection;
 
     _textControls
       ..style.left = '${p.x}px'
@@ -305,7 +305,7 @@ class Whiteboard with WhiteboardData {
         moveStreamCtrl = null;
 
         if (mode == modeText && layer.layerEl.isConnected) {
-          _onTextSelect(fixedPoint(ev), layer);
+          _onTextSelect(layer);
         }
 
         history.registerDoneAction(await action.future);
