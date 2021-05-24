@@ -12,6 +12,8 @@ class WhiteboardData implements Serializable {
 
   @override
   void loadFromBytes(BinaryReader reader) {
+    layers.clear();
+    texts.clear();
     var layerCount = reader.readUInt8();
     for (var i = 0; i < layerCount; i++) {
       layers.add(DrawingData()..loadFromBytes(reader));

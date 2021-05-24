@@ -55,7 +55,6 @@ class Whiteboard with WhiteboardData {
     _initTextControls();
     _initCursorControls();
     _initKeyListener();
-    addDrawingLayer();
     mode = modePin;
     pin = PinLayer(this);
     socket
@@ -70,6 +69,7 @@ class Whiteboard with WhiteboardData {
 
   @override
   void loadFromBytes(BinaryReader reader) {
+    clear();
     var layerCount = reader.readUInt8();
     for (var i = 0; i < layerCount; i++) {
       layers.add(DrawingLayer(this)..loadFromBytes(reader));

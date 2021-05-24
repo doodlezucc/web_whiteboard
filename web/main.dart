@@ -7,10 +7,13 @@ void main() {
   var src =
       'https://i.pinimg.com/originals/cc/2a/28/cc2a2884782eca399299b3243ce66231.jpg';
 
-  var canvas = Whiteboard(querySelector('#canvas'))..changeBackground(src);
+  var canvas = Whiteboard(querySelector('#canvas'))
+    ..changeBackground(src)
+    ..addDrawingLayer();
   var canvas2 = Whiteboard(querySelector('#canvasClone'))
     ..captureInput = false
-    ..changeBackground(src);
+    ..changeBackground(src)
+    ..addDrawingLayer();
 
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
