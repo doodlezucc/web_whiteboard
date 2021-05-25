@@ -17,6 +17,11 @@ void main() {
   // Establish connection to localhost:7070 where the server is running
   clientSocket.connect();
 
+  whiteboard.history.onChange.listen((event) {
+    print(whiteboard.history.positionInStack);
+    print(whiteboard.history.canRedo);
+  });
+
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
 
@@ -27,6 +32,11 @@ void main() {
             ? Whiteboard.modeText
             : Whiteboard.modeDraw;
         print(whiteboard.mode + ' mode');
+      } else if (ev.key == 'e') {
+        ev.preventDefault();
+        var erase = !whiteboard.eraser;
+        whiteboard.eraser = erase;
+        print('eraser: $erase');
       }
     }
 

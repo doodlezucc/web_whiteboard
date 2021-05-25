@@ -1,3 +1,5 @@
+import 'dart:async';
+
 abstract class Action {
   bool _isDone = false;
   bool get isDone => _isDone;
@@ -27,7 +29,13 @@ abstract class Action {
 
 class History {
   final List<Action> _stack = [];
+  final _streamCtrl = StreamController<Action>.broadcast();
   int _actionsDone = 0;
+
+  Stream<Action> get onChange => _streamCtrl.stream;
+  Iterable<Action> get stack => _stack;
+  int get positionInStack => _actionsDone;
+  bool get canRedo => _actionsDone < _stack.length;
 
   void perform(Action a, [bool reversible = true]) {
     if (!reversible) {
@@ -56,12 +64,14 @@ class History {
       a._run();
     }
     _actionsDone++;
+    _streamCtrl.add(a);
   }
 
   void undo() {
     if (_actionsDone > 0) {
       _stack[_actionsDone - 1]._unrun();
       _actionsDone--;
+      _streamCtrl.add(null);
     }
   }
 
@@ -69,13 +79,17 @@ class History {
     if (_actionsDone < _stack.length) {
       _stack[_actionsDone]._run();
       _actionsDone++;
+      _streamCtrl.add(null);
     }
   }
 
   /// ♫ _In my brain I rearrange the letters on the page to spell your name._ ♫
   void erase() {
-    _actionsDone = 0;
-    _stack.clear();
+    if (_stack.isNotEmpty) {
+      _actionsDone = 0;
+      _stack.clear();
+      _streamCtrl.add(null);
+    }
   }
 }
 
