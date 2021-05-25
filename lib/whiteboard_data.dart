@@ -10,6 +10,15 @@ class WhiteboardData implements Serializable {
   final texts = <TextData>[];
   PinData pin = PinData();
 
+  /// Returns true if the whiteboard doesn't contain layers.
+  bool get isEmpty => layers.isEmpty && texts.isEmpty && !pin.visible;
+
+  /// Returns true if every layer is empty.
+  bool get isClear =>
+      texts.isEmpty &&
+      !pin.visible &&
+      layers.every((layer) => layer.strokes.isEmpty);
+
   void clear({bool deleteLayers = false}) {
     if (deleteLayers) {
       layers.clear();
