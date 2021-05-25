@@ -6,6 +6,7 @@ import 'dart:svg' as svg;
 
 import 'package:pedantic/pedantic.dart';
 import 'package:web_whiteboard/binary.dart';
+import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
 import 'package:web_whiteboard/layers/layer.dart';
@@ -69,7 +70,7 @@ class Whiteboard with WhiteboardData {
 
   @override
   void loadFromBytes(BinaryReader reader) {
-    clear();
+    clear(sendEvent: false, deleteLayers: true);
     var layerCount = reader.readUInt8();
     for (var i = 0; i < layerCount; i++) {
       layers.add(DrawingLayer(this)..loadFromBytes(reader));
@@ -112,16 +113,29 @@ class Whiteboard with WhiteboardData {
     return layer;
   }
 
-  void clear() {
-    for (var l in layers) {
-      (l as Layer).dispose();
-    }
-    layers.clear();
-
+  @override
+  void clear({bool sendEvent = true, bool deleteLayers = false}) {
     for (var t in texts) {
       (t as Layer).dispose();
     }
     texts.clear();
+    pin.visible = false;
+    history.erase();
+
+    if (deleteLayers) {
+      for (var l in layers) {
+        (l as Layer).dispose();
+      }
+      layers.clear();
+    } else {
+      for (var l in layers) {
+        (l as DrawingLayer).onClear();
+      }
+    }
+
+    if (sendEvent) {
+      socket.send(BinaryEvent(7)..writeBool(deleteLayers));
+    }
   }
 
   Future<void> changeBackground(String src) async {

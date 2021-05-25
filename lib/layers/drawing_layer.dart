@@ -100,6 +100,14 @@ class DrawingLayer extends Layer with DrawingData {
     return StrokeAction(this, false, erased, copy);
   }
 
+  void onClear() {
+    for (svg.PathElement path in layerEl.children) {
+      path.remove();
+    }
+    strokes.clear();
+    _pathData.clear();
+  }
+
   @override
   void writeToBytes(BinaryWriter writer) {
     super.writeToBytes(writer);

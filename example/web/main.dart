@@ -29,5 +29,10 @@ void main() {
         print(whiteboard.mode + ' mode');
       }
     }
+
+    if (ev.shiftKey && ev.key == 'Delete') {
+      whiteboard.clear();
+      print('cleared whiteboard');
+    }
   });
 }

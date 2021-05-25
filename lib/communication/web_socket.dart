@@ -108,6 +108,10 @@ class WhiteboardSocket extends SocketBase {
       case 6:
         whiteboard.pin.loadFromBytes(reader);
         return true;
+
+      case 7:
+        whiteboard.clear(sendEvent: false, deleteLayers: reader.readBool());
+        return true;
     }
 
     return false;

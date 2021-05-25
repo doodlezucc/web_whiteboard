@@ -10,6 +10,19 @@ class WhiteboardData implements Serializable {
   final texts = <TextData>[];
   PinData pin = PinData();
 
+  void clear({bool deleteLayers = false}) {
+    if (deleteLayers) {
+      layers.clear();
+    } else {
+      for (var l in layers) {
+        l.strokes.clear();
+      }
+    }
+
+    texts.clear();
+    pin.visible = false;
+  }
+
   @override
   void loadFromBytes(BinaryReader reader) {
     layers.clear();
