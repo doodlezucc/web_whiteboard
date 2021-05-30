@@ -17,11 +17,6 @@ void main() {
   // Establish connection to localhost:7070 where the server is running
   clientSocket.connect();
 
-  whiteboard.history.onChange.listen((event) {
-    print(whiteboard.history.positionInStack);
-    print(whiteboard.history.canRedo);
-  });
-
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
 

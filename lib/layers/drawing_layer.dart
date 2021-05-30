@@ -94,10 +94,13 @@ class DrawingLayer extends Layer with DrawingData {
       }
     }
 
-    eraseAt(first);
-    stream.listen(eraseAt);
+    var completer = Completer();
 
-    return StrokeAction(this, false, erased, copy);
+    eraseAt(first);
+    stream.listen(eraseAt, onDone: completer.complete);
+    await completer.future;
+
+    return erased.isEmpty ? null : StrokeAction(this, false, erased, copy);
   }
 
   void onClear() {
