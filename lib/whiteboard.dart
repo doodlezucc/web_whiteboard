@@ -13,6 +13,7 @@ import 'package:web_whiteboard/layers/drawn_stroke.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/layers/pin_layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
+import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/util.dart';
 import 'package:web_whiteboard/communication/web_socket.dart';
 import 'package:web_whiteboard/whiteboard_data.dart';
@@ -317,8 +318,11 @@ class Whiteboard with WhiteboardData {
         var first = fixedPoint(ev);
         if (eraser && mode == modeDraw && eraseAcrossLayers) {
           // Erase across layers
-          var strokesBefore =
-              layers.expand((l) => l.strokes.map((s) => DrawnStroke(l, s)));
+          var strokesBefore = <DrawingLayer, List<Stroke>>{};
+
+          for (var l in layers) {
+            strokesBefore[l] = List.from(l.strokes);
+          }
 
           var combinedEraseStream = Future.wait(layers.map((l) =>
               (l as DrawingLayer)

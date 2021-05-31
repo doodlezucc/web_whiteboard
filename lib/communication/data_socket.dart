@@ -72,6 +72,26 @@ class WhiteboardDataSocket extends SocketBase {
       case 7:
         whiteboard.clear(deleteLayers: reader.readBool());
         return true;
+
+      case 8:
+        var strokeCount = reader.readUInt8();
+        for (var i = 0; i < strokeCount; i++) {
+          getLayer().strokes.add(Stroke()..loadFromBytes(reader));
+        }
+        return true;
+
+      case 9:
+        var strokeCount = reader.readUInt8();
+        var toRemove = <DrawingData, List<Stroke>>{};
+        for (var i = 0; i < strokeCount; i++) {
+          var layer = getLayer();
+          var index = reader.readUInt8();
+          toRemove.putIfAbsent(layer, () => []).add(layer.strokes[index]);
+        }
+        toRemove.forEach((layer, stroke) {
+          layer.strokes.remove(stroke);
+        });
+        return true;
     }
 
     return false;

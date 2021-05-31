@@ -7,6 +7,7 @@ import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/communication/socket_base.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
+import 'package:web_whiteboard/layers/drawn_stroke.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
 import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/whiteboard.dart';
@@ -111,6 +112,30 @@ class WhiteboardSocket extends SocketBase {
 
       case 7:
         whiteboard.clear(sendEvent: false, deleteLayers: reader.readBool());
+        return true;
+
+      case 8:
+        var strokeCount = reader.readUInt8();
+        var strokes = <DrawnStroke>[];
+        for (var i = 0; i < strokeCount; i++) {
+          strokes.add(DrawnStroke(getLayer(), Stroke()..loadFromBytes(reader)));
+        }
+        whiteboard.history.perform(
+            StrokeAcrossAction(true, strokes, null)..userCreated = false,
+            false);
+        return true;
+
+      case 9:
+        var strokeCount = reader.readUInt8();
+        var toRemove = <DrawnStroke>[];
+        for (var i = 0; i < strokeCount; i++) {
+          var layer = getLayer();
+          var index = reader.readUInt8();
+          toRemove.add(DrawnStroke(layer, layer.strokes[index]));
+        }
+        whiteboard.history.perform(
+            StrokeAcrossAction(false, toRemove, null)..userCreated = false,
+            false);
         return true;
     }
 

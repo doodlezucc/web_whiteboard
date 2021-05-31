@@ -100,7 +100,7 @@ class DrawingLayer extends Layer with DrawingData {
     var completer = Completer();
 
     eraseAtHelper(first);
-    stream.listen(_eraseAt, onDone: completer.complete);
+    stream.listen(eraseAtHelper, onDone: completer.complete);
     await completer.future;
 
     return erased.isEmpty ? null : StrokeAction(this, false, erased, copy);
@@ -185,7 +185,7 @@ class StrokeAction extends AddRemoveAction<Stroke> {
 }
 
 class StrokeAcrossAction extends AddRemoveAction<DrawnStroke> {
-  final List<DrawnStroke> strokesBefore;
+  final Map<DrawingLayer, List<Stroke>> strokesBefore;
 
   StrokeAcrossAction(
       bool forward, Iterable<DrawnStroke> list, this.strokesBefore)
@@ -206,7 +206,7 @@ class StrokeAcrossAction extends AddRemoveAction<DrawnStroke> {
     if (userCreated) {
       var event = BinaryEvent(9)..writeUInt8(list.length);
       list.forEach((s) {
-        var bufferedIndex = strokesBefore.indexOf(s);
+        var bufferedIndex = strokesBefore[s.layer].indexOf(s.stroke);
         var realIndex = s.layer.strokes.indexOf(s.stroke);
         event.writeUInt8(s.layer.indexInWhiteboard);
         event.writeUInt8(realIndex == -1 ? bufferedIndex : realIndex);

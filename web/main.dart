@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:js';
 
+import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
 void main() {
@@ -9,11 +10,14 @@ void main() {
 
   var canvas = Whiteboard(querySelector('#canvas'))
     ..changeBackground(src)
-    ..addDrawingLayer();
+    ..addDrawingLayer()
+    ..addDrawingLayer()
+    ..addDrawingLayer()
+    ..addDrawingLayer()
+    ..eraseAcrossLayers = true;
   var canvas2 = Whiteboard(querySelector('#canvasClone'))
     ..captureInput = false
-    ..changeBackground(src)
-    ..addDrawingLayer();
+    ..changeBackground(src);
 
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
@@ -24,6 +28,23 @@ void main() {
         canvas.mode = canvas.mode == Whiteboard.modeDraw
             ? Whiteboard.modeText
             : Whiteboard.modeDraw;
+        print('Mode: ${canvas.mode}');
+      } else if (ev.key == 'e') {
+        ev.preventDefault();
+        canvas.eraser = !canvas.eraser;
+        print('Eraser: ${canvas.eraser}');
+      } else if (ev.key == 'ArrowUp') {
+        ev.preventDefault();
+        if (canvas.layerIndex < canvas.layers.length - 1) {
+          canvas.layerIndex++;
+          print('Layer: ${canvas.layerIndex}');
+        }
+      } else if (ev.key == 'ArrowDown') {
+        ev.preventDefault();
+        if (canvas.layerIndex > 0) {
+          canvas.layerIndex--;
+          print('Layer: ${canvas.layerIndex}');
+        }
       }
     } else {
       if (ev.key == 's') {
@@ -47,7 +68,10 @@ void main() {
     }
   });
 
+  var reader = BinaryReader(canvas.toBytes().buffer);
+  canvas2.loadFromBytes(reader);
   canvas.socket.sendStream.listen((event) {
+    print(event);
     canvas2.socket.handleEventBytes(event);
   });
 }
