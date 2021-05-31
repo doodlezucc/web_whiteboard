@@ -25,8 +25,7 @@ class BinaryEvent extends BinaryWriter {
     }
   }
 
-  void _writeLayerIndex() =>
-      writeUInt8(context.whiteboard.layers.indexOf(context.drawingLayer));
+  void _writeLayerIndex() => writeUInt8(context.drawingLayer.indexInWhiteboard);
   void _writeTextIndex() =>
       writeUInt8(context.whiteboard.texts.indexOf(context.textLayer));
 }

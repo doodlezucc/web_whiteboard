@@ -6,6 +6,7 @@ import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_data.dart';
+import 'package:web_whiteboard/layers/drawn_stroke.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/stroke.dart';
 import 'package:web_whiteboard/util.dart';
@@ -13,13 +14,14 @@ import 'package:web_whiteboard/whiteboard.dart';
 
 class DrawingLayer extends Layer with DrawingData {
   final _pathData = <svg.PathElement, Stroke>{};
+  int get indexInWhiteboard => canvas.layers.indexOf(this);
 
   DrawingLayer(Whiteboard canvas) : super(canvas, svg.GElement());
 
   @override
   Future<Action> onMouseDown(Point first, Stream<Point> stream) {
     if (canvas.eraser) {
-      return _handleEraseStream(first, stream);
+      return handleEraseStream(first, stream);
     } else {
       return _handleDrawStream(first, stream);
     }
@@ -70,34 +72,35 @@ class DrawingLayer extends Layer with DrawingData {
     strokes.remove(_pathData.remove(pathEl));
   }
 
-  Future<Action> _handleEraseStream(Point first, Stream<Point> stream) async {
-    var copy = List<Stroke>.from(strokes);
+  Iterable<Stroke> _eraseAt(Point p) {
     var paths = List.from(layerEl.children);
     var erased = <Stroke>[];
+    var svgPoint = canvas.root.createSvgPoint()
+      ..x = p.x
+      ..y = p.y;
 
-    void eraseAt(Point p) {
-      var svgPoint = canvas.root.createSvgPoint()
-        ..x = p.x
-        ..y = p.y;
-      var changed = false;
-
-      for (svg.PathElement path in paths) {
-        if (path.isPointInStroke(svgPoint)) {
-          erased.add(_pathData[path]);
-          _erase(path);
-          changed = true;
-        }
+    for (svg.PathElement path in paths) {
+      if (path.isPointInStroke(svgPoint)) {
+        erased.add(_pathData[path]);
+        _erase(path);
       }
+    }
 
-      if (changed) {
-        paths = List.from(layerEl.children);
-      }
+    return erased;
+  }
+
+  Future<Action> handleEraseStream(Point first, Stream<Point> stream) async {
+    var copy = List<Stroke>.from(strokes);
+    var erased = <Stroke>[];
+
+    void eraseAtHelper(Point p) {
+      erased.addAll(_eraseAt(p));
     }
 
     var completer = Completer();
 
-    eraseAt(first);
-    stream.listen(eraseAt, onDone: completer.complete);
+    eraseAtHelper(first);
+    stream.listen(_eraseAt, onDone: completer.complete);
     await completer.future;
 
     return erased.isEmpty ? null : StrokeAction(this, false, erased, copy);
@@ -173,6 +176,65 @@ class StrokeAction extends AddRemoveAction<Stroke> {
   void undoSingle(Stroke stroke) {
     layer._erase(
         layer._pathData.entries.firstWhere((n) => n.value == stroke).key);
+  }
+
+  @override
+  void onBeforeExecute(bool forward) {
+    forward ? _sendDrawEvent() : _sendEraseEvent();
+  }
+}
+
+class StrokeAcrossAction extends AddRemoveAction<DrawnStroke> {
+  final List<DrawnStroke> strokesBefore;
+
+  StrokeAcrossAction(
+      bool forward, Iterable<DrawnStroke> list, this.strokesBefore)
+      : super(forward, list);
+
+  void _sendDrawEvent() {
+    if (userCreated) {
+      var event = BinaryEvent(8)..writeUInt8(list.length);
+      list.forEach((s) {
+        event.writeUInt8(s.layer.indexInWhiteboard);
+        s.stroke.writeToBytes(event);
+      });
+      list.first.layer.canvas.socket.send(event);
+    }
+  }
+
+  void _sendEraseEvent() {
+    if (userCreated) {
+      var event = BinaryEvent(9)..writeUInt8(list.length);
+      list.forEach((s) {
+        var bufferedIndex = strokesBefore.indexOf(s);
+        var realIndex = s.layer.strokes.indexOf(s.stroke);
+        event.writeUInt8(s.layer.indexInWhiteboard);
+        event.writeUInt8(realIndex == -1 ? bufferedIndex : realIndex);
+      });
+      list.first.layer.canvas.socket.send(event);
+    }
+  }
+
+  @override
+  void doSingle(DrawnStroke stroke) {
+    stroke.layer._addPath(stroke.stroke);
+    stroke.layer.strokes.add(stroke.stroke);
+  }
+
+  @override
+  void onSilentRegister() {
+    if (forward) {
+      _sendDrawEvent();
+    } else if (!forward) {
+      _sendEraseEvent();
+    }
+  }
+
+  @override
+  void undoSingle(DrawnStroke stroke) {
+    stroke.layer._erase(stroke.layer._pathData.entries
+        .firstWhere((n) => n.value == stroke.stroke)
+        .key);
   }
 
   @override

@@ -9,6 +9,7 @@ import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/history.dart';
 import 'package:web_whiteboard/layers/drawing_layer.dart';
+import 'package:web_whiteboard/layers/drawn_stroke.dart';
 import 'package:web_whiteboard/layers/layer.dart';
 import 'package:web_whiteboard/layers/pin_layer.dart';
 import 'package:web_whiteboard/layers/text_layer.dart';
@@ -33,6 +34,7 @@ class Whiteboard with WhiteboardData {
   final socket = WhiteboardSocket();
 
   bool eraser = false;
+  bool eraseAcrossLayers = false;
   bool captureInput = true;
   int layerIndex = 0;
   int defaultFontSize = 20;
@@ -310,11 +312,38 @@ class Whiteboard with WhiteboardData {
         document.activeElement.blur();
         moveStreamCtrl = StreamController.broadcast();
 
-        var action = Completer();
-        unawaited(
-            layer.onMouseDown(fixedPoint(ev), moveStreamCtrl.stream).then((a) {
-          action.complete(a);
-        }));
+        var action = Completer<Action>();
+
+        var first = fixedPoint(ev);
+        if (eraser && mode == modeDraw && eraseAcrossLayers) {
+          // Erase across layers
+          var strokesBefore =
+              layers.expand((l) => l.strokes.map((s) => DrawnStroke(l, s)));
+
+          var combinedEraseStream = Future.wait(layers.map((l) =>
+              (l as DrawingLayer)
+                  .handleEraseStream(first, moveStreamCtrl.stream)));
+
+          unawaited(combinedEraseStream.then((actions) {
+            var combinedErased = <DrawnStroke>[];
+
+            for (StrokeAction a in actions) {
+              if (a != null) {
+                combinedErased
+                    .addAll(a.list.map((s) => DrawnStroke(a.layer, s)));
+              }
+            }
+
+            var combinedAction =
+                StrokeAcrossAction(false, combinedErased, strokesBefore);
+            action.complete(combinedErased.isEmpty ? null : combinedAction);
+          }));
+        } else {
+          // Other mouse actions
+          unawaited(layer.onMouseDown(first, moveStreamCtrl.stream).then((a) {
+            action.complete(a);
+          }));
+        }
 
         await endEvent.first;
         await moveStreamCtrl.close();
