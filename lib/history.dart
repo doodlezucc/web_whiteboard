@@ -55,6 +55,23 @@ class History {
     }
   }
 
+  void discardActionsWhere(bool Function(Action a) condition) {
+    var toRemove = <Action>[];
+    for (var i = 0; i < _stack.length; i++) {
+      var a = _stack[i];
+      if (condition(a)) {
+        toRemove.add(a);
+        if (_actionsDone > i) {
+          _actionsDone--;
+        }
+      }
+    }
+
+    toRemove.forEach((a) => _stack.remove(a));
+
+    if (toRemove.isNotEmpty) _streamCtrl.add(null);
+  }
+
   void _registerAction(Action a) {
     if (_actionsDone < _stack.length) {
       _stack.removeRange(_actionsDone, _stack.length);

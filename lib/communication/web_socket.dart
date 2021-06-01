@@ -133,6 +133,10 @@ class WhiteboardSocket extends SocketBase {
           var index = reader.readUInt8();
           toRemove.add(DrawnStroke(layer, layer.strokes[index]));
         }
+        // Unregister active layer actions
+        whiteboard.history.discardActionsWhere(
+            (a) => a is StrokeAction && a.layer == whiteboard.layer);
+
         whiteboard.history.perform(
             StrokeAcrossAction(false, toRemove, null)..userCreated = false,
             false);
