@@ -158,6 +158,10 @@ class Whiteboard with WhiteboardData {
     var zoomY = h / _img.naturalHeight;
     _zoomCorrection = min(zoomX, zoomY);
 
+    if (root.viewBox.baseVal == null) {
+      root.setAttribute('viewBox', '0 0 100 100');
+    }
+
     root.viewBox.baseVal
       ..width = w / _zoomCorrection
       ..height = h / _zoomCorrection;
