@@ -57,7 +57,7 @@ class History {
 
   void discardActionsWhere(bool Function(Action a) condition) {
     var toRemove = <Action>[];
-    for (var i = 0; i < _stack.length; i++) {
+    for (var i = _stack.length - 1; i >= 0; i--) {
       var a = _stack[i];
       if (condition(a)) {
         toRemove.add(a);

@@ -128,14 +128,17 @@ class WhiteboardSocket extends SocketBase {
       case 9:
         var strokeCount = reader.readUInt8();
         var toRemove = <DrawnStroke>[];
+        var affectedLayers = <DrawingLayer>{};
         for (var i = 0; i < strokeCount; i++) {
           var layer = getLayer();
+          affectedLayers.add(layer);
+
           var index = reader.readUInt8();
           toRemove.add(DrawnStroke(layer, layer.strokes[index]));
         }
         // Unregister active layer actions
         whiteboard.history.discardActionsWhere(
-            (a) => a is StrokeAction && a.layer == whiteboard.layer);
+            (a) => a is StrokeAction && affectedLayers.contains(a.layer));
 
         whiteboard.history.perform(
             StrokeAcrossAction(false, toRemove, null)..userCreated = false,

@@ -88,8 +88,10 @@ class WhiteboardDataSocket extends SocketBase {
           var index = reader.readUInt8();
           toRemove.putIfAbsent(layer, () => []).add(layer.strokes[index]);
         }
-        toRemove.forEach((layer, stroke) {
-          layer.strokes.remove(stroke);
+        toRemove.forEach((layer, strokes) {
+          strokes.forEach((s) {
+            layer.strokes.remove(s);
+          });
         });
         return true;
     }
