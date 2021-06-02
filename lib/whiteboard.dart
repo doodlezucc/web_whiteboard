@@ -59,7 +59,7 @@ class Whiteboard with WhiteboardData {
     _initTextControls();
     _initCursorControls();
     _initKeyListener();
-    mode = modePin;
+    mode = modeDraw;
     pin = PinLayer(this);
     socket
       ..whiteboard = this

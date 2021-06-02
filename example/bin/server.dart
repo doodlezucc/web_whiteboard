@@ -16,7 +16,7 @@ import 'websockets.dart';
 const _hostname = 'localhost';
 
 final whiteboardSocket = WhiteboardDataSocket(
-  WhiteboardData()..layers.add(DrawingData()),
+  WhiteboardData()..layers.addAll(List.generate(10, (i) => DrawingData())),
   prefix: '%wb',
 );
 
@@ -35,18 +35,8 @@ void main(List<String> args) async {
     return;
   }
 
-  // Response _cors(Response response) => response.change(headers: {
-  //       'Access-Control-Allow-Origin': '*',
-  //       'Access-Control-Allow-Methods': 'GET, POST',
-  //       'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token',
-  //     });
-
-  // var _fixCORS = createMiddleware(responseHandler: _cors);
-
-  var handler = const Pipeline()
-      // .addMiddleware(_fixCORS)
-      .addMiddleware(logRequests())
-      .addHandler(_echoRequest);
+  var handler =
+      const Pipeline().addMiddleware(logRequests()).addHandler(_echoRequest);
 
   var server = await io.serve(handler, _hostname, port);
   print('Serving at http://${server.address.host}:${server.port}');
