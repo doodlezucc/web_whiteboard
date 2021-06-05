@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:html';
+import 'dart:math';
 import 'dart:svg' as svg;
 
 import 'package:web_whiteboard/binary.dart';
@@ -35,8 +36,8 @@ class TextLayer extends Layer with TextData {
 
   @override
   set fontSize(int fontSize) {
-    super.fontSize = fontSize;
-    textElement.style.fontSize = '${fontSize}px';
+    super.fontSize = max(5, fontSize);
+    textElement.style.fontSize = '${super.fontSize}px';
   }
 
   @override

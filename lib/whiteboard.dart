@@ -177,7 +177,7 @@ class Whiteboard with WhiteboardData {
       ..append(_textInput..placeholder = 'Text...')
       ..append(SpanElement()
         ..text = 'Font size:'
-        ..append(_fontSizeInput)
+        ..append(_fontSizeInput..min = '5')
         ..append(textRemoveButton
           ..text = 'Remove'
           ..onClick.listen((_) => _removeSelectedText())));
@@ -195,7 +195,7 @@ class Whiteboard with WhiteboardData {
       selectedText?.text = _textInput.value;
     });
     _fontSizeInput.onInput.listen((ev) {
-      selectedText?.fontSize = _fontSizeInput.valueAsNumber ?? 20;
+      selectedText?.fontSize = _fontSizeInput.valueAsNumber ?? defaultFontSize;
     });
   }
 
