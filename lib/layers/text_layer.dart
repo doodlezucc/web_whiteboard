@@ -24,7 +24,12 @@ class TextLayer extends Layer with TextData {
       _bufferedText = text;
       _bufferedFontSize = fontSize;
     } else {
-      if (text != _bufferedText || fontSize != _bufferedFontSize) {
+      text = text.trim();
+
+      if (text.isEmpty) {
+        text = _bufferedText;
+        fontSize = _bufferedFontSize;
+      } else if (text != _bufferedText || fontSize != _bufferedFontSize) {
         canvas.history.registerDoneAction(TextUpdateAction(
             this, _bufferedText, text, _bufferedFontSize, fontSize));
       }
