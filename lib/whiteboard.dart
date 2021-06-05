@@ -248,9 +248,17 @@ class Whiteboard with WhiteboardData {
 
     var p = forceDoublePoint(text.position) * _zoomCorrection;
 
+    // Check if text controls should appear below the text
+    var shouldWrap = p.y <= _textControls.clientHeight;
+
+    if (shouldWrap) {
+      p = Point(p.x, p.y + text.fontSize * text.text.split('\n').length);
+    }
+
     _textControls
       ..style.left = '${p.x}px'
       ..style.top = '${p.y}px'
+      ..classes.toggle('display-below', shouldWrap)
       ..classes.toggle('hidden', false);
 
     Future.delayed(Duration(milliseconds: 1), () => _textInput.focus());

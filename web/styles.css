@@ -72,6 +72,9 @@ svg text {
   transition-property: opacity, transform;
   transition-duration: 0.2s;
 }
+#whiteboardTextControls.display-below {
+  transform: translate(-50%, 12px);
+}
 #whiteboardTextControls.hidden {
   opacity: 0;
   pointer-events: none;
