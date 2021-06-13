@@ -40,6 +40,7 @@ class Whiteboard with WhiteboardData {
   int layerIndex = 0;
   int defaultFontSize = 20;
   double _zoomCorrection = 1;
+  String activeColor = '#000000';
 
   DrawingLayer get layer => layers[layerIndex];
 

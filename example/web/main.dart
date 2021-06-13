@@ -19,6 +19,7 @@ void main() {
 
   _initWhiteboardShortcuts();
   _initLayerInput();
+  _initColorInput();
 }
 
 void _initWhiteboardShortcuts() {
@@ -30,9 +31,16 @@ void _initWhiteboardShortcuts() {
 }
 
 void _initLayerInput() {
-  InputElement input = querySelector('input');
+  InputElement input = querySelector('input[type=range]');
   input.onInput.listen((_) {
     whiteboard.layerIndex = min(max(input.valueAsNumber, 0), 10);
+  });
+}
+
+void _initColorInput() {
+  InputElement input = querySelector('input[type=color]');
+  input.onInput.listen((_) {
+    whiteboard.activeColor = input.value;
   });
 }
 

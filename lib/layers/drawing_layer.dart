@@ -44,7 +44,7 @@ class DrawingLayer extends Layer with DrawingData {
 
     var path = Stroke(
       points: [first],
-      stroke: '#000000',
+      stroke: canvas.activeColor,
       strokeWidth: '5px',
     );
 
@@ -52,7 +52,7 @@ class DrawingLayer extends Layer with DrawingData {
     var pathEl = _addPath(path);
 
     var lastDraw = first;
-    const minDistanceSquared = 12;
+    const minDistanceSquared = 8;
 
     stream.listen((p) {
       if (p.squaredDistanceTo(lastDraw) > minDistanceSquared) {
