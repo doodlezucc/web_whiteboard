@@ -4,7 +4,6 @@ import 'dart:html';
 import 'dart:math';
 import 'dart:svg' as svg;
 
-import 'package:pedantic/pedantic.dart';
 import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/communication/binary_event.dart';
 import 'package:web_whiteboard/history.dart';
@@ -187,7 +186,9 @@ class Whiteboard with WhiteboardData {
       ..width.baseVal.valueAsString = '100%'
       ..height.baseVal.valueAsString = '100%'
       ..append(_background);
-    _container..append(root)..append(_textControls);
+    _container
+      ..append(root)
+      ..append(_textControls);
     window.onResize.listen((_) => updateScaling());
   }
 
