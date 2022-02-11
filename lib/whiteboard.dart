@@ -40,6 +40,7 @@ class Whiteboard with WhiteboardData {
   int defaultFontSize = 20;
   double _zoomCorrection = 1;
   String activeColor = '#000000';
+  double textControlsWrapMin;
 
   DrawingLayer get layer => layers[layerIndex];
 
@@ -53,8 +54,11 @@ class Whiteboard with WhiteboardData {
     _onTextDeselect();
   }
 
-  Whiteboard(HtmlElement container, {String webSocketPrefix = ''})
-      : _container = container {
+  Whiteboard(
+    HtmlElement container, {
+    String webSocketPrefix = '',
+    this.textControlsWrapMin = 0,
+  }) : _container = container {
     _initDom();
     _initTextControls();
     _initCursorControls();
@@ -251,7 +255,7 @@ class Whiteboard with WhiteboardData {
     var p = forceDoublePoint(text.position) * _zoomCorrection;
 
     // Check if text controls should appear below the text
-    var shouldWrap = p.y <= _textControls.clientHeight;
+    var shouldWrap = p.y - textControlsWrapMin <= _textControls.clientHeight;
 
     if (shouldWrap) {
       p = Point(p.x, p.y + text.fontSize * text.text.split('\n').length);
