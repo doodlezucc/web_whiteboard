@@ -54,6 +54,9 @@ class Whiteboard with WhiteboardData {
     _onTextDeselect();
   }
 
+  num get naturalWidth => _img.naturalWidth;
+  num get naturalHeight => _img.naturalHeight;
+
   Whiteboard(
     HtmlElement container, {
     String webSocketPrefix = '',
