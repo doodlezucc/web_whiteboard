@@ -2,10 +2,14 @@ import 'dart:math';
 
 import 'package:web_whiteboard/binary.dart';
 
+final _decimal = RegExp(r'^\d*\.?\d+');
+
 class Stroke implements Serializable {
   List<Point<int>> points;
   String stroke;
   String strokeWidth;
+
+  num get strokeWidthNum => num.parse(_decimal.firstMatch(strokeWidth)[0]);
 
   Stroke({
     this.points,

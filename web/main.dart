@@ -19,6 +19,10 @@ void main() {
     ..captureInput = false
     ..changeBackground(src);
 
+  // You don't need a <canvas> element for whiteboards. In this example,
+  // htmlCanvas is only used to test the "Whiteboard.drawToCanvas" function.
+  CanvasElement htmlCanvas = querySelector('canvas');
+
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;
 
@@ -71,6 +75,7 @@ void main() {
   var reader = BinaryReader(canvas.toBytes().buffer);
   canvas2.loadFromBytes(reader);
   canvas.socket.sendStream.listen((event) {
+    canvas.drawToCanvas(htmlCanvas);
     print(event);
     canvas2.socket.handleEventBytes(event);
   });

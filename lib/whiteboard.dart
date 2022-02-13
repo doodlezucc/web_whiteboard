@@ -171,6 +171,22 @@ class Whiteboard with WhiteboardData {
       ..height = h / _zoomCorrection;
   }
 
+  /// Draws the current background image and strokes from all layers
+  /// to the context of [canvas] in full scale.
+  /// This method does not support drawing text items or whiteboard pins.
+  void drawToCanvas(CanvasElement canvas) {
+    var ctx = canvas.context2D;
+    ctx.drawImage(_img, 0, 0);
+
+    for (var layer in layers) {
+      for (var stroke in layer.strokes) {
+        ctx.strokeStyle = stroke.stroke;
+        ctx.lineWidth = stroke.strokeWidthNum;
+        ctx.stroke(Path2D(stroke.toData()));
+      }
+    }
+  }
+
   void _initDom() {
     if (_container.style.position.isEmpty) {
       _container.style.position = 'relative';

@@ -105,3 +105,11 @@ svg text {
   width: 40px;
   margin-right: auto;
 }
+
+canvas {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  box-shadow: 0 0 10px #0005;
+}
