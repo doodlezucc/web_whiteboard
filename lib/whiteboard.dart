@@ -54,6 +54,7 @@ class Whiteboard with WhiteboardData {
     _onTextDeselect();
   }
 
+  ImageElement get backgroundImageElement => _img;
   num get naturalWidth => _img.naturalWidth;
   num get naturalHeight => _img.naturalHeight;
 
