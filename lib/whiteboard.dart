@@ -41,6 +41,7 @@ class Whiteboard with WhiteboardData {
   double _zoomCorrection = 1;
   String activeColor = '#000000';
   double textControlsWrapMin;
+  bool Function(Event event) useStartEvent = (_) => true;
 
   DrawingLayer get layer => layers[layerIndex];
 
@@ -313,7 +314,8 @@ class Whiteboard with WhiteboardData {
       startEvent.listen((ev) async {
         if (!captureInput ||
             _isInput(ev.target) ||
-            !ev.path.any((e) => e == root)) return;
+            !ev.path.any((e) => e == root) ||
+            !useStartEvent(ev)) return;
 
         Layer layer = mode == modeDraw ? this.layer : (pin as PinLayer);
 
