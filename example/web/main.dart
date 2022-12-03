@@ -75,10 +75,10 @@ bool _handleKeyEvent(KeyboardEvent ev) {
         print('text mode');
         return true;
 
-      case 85:
-        // T key
+      case 80:
+        // P key
         whiteboard.mode = Whiteboard.modePin;
-        print('text mode');
+        print('pin mode');
         return true;
     }
   }

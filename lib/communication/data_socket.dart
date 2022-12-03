@@ -52,9 +52,14 @@ class WhiteboardDataSocket extends SocketBase {
         return true;
 
       case 3:
-        getText()
-          ..fontSize = reader.readUInt8()
-          ..text = reader.readString();
+        try {
+          getText()
+            ..fontSize = reader.readUInt8()
+            ..text = reader.readString();
+        } on RangeError {
+          // Text at specified index was not created yet
+          return false;
+        }
         return true;
 
       case 4:
