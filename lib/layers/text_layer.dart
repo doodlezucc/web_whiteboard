@@ -121,13 +121,8 @@ class TextLayer extends Layer with TextData {
     var endPos = await completer.future;
 
     if (textElement.isConnected == false) {
-      if (creation) {
-        // Text element was deleted before being placed
-        return null;
-      } else {
-        // Text element was deleted while dragging
-        return TextInstanceAction(this, startPos, false);
-      }
+      // Text element was deleted while dragging
+      return null;
     }
 
     if (creation) {
