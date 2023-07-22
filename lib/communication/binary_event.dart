@@ -28,19 +28,14 @@ class BinaryEvent extends BinaryWriter {
   void _writeLayerIndex() =>
       writeUInt8(context.drawingLayer!.indexInWhiteboard);
   void _writeTextIndex() =>
-      writeUInt8(context.whiteboard.texts.indexOf(context.textLayer!));
+      writeUInt8(context.whiteboard!.texts.indexOf(context.textLayer!));
 }
 
 class EventContext {
-  late Whiteboard whiteboard;
+  final Whiteboard? whiteboard;
   final DrawingLayer? drawingLayer;
   final TextLayer? textLayer;
 
-  EventContext({this.drawingLayer, this.textLayer}) {
-    if (drawingLayer == null && textLayer == null) {
-      throw 'Supply either a drawing layer or a text layer (or both)';
-    }
-
-    whiteboard = (drawingLayer?.canvas ?? textLayer?.canvas)!;
-  }
+  EventContext({this.drawingLayer, this.textLayer})
+      : whiteboard = drawingLayer?.canvas ?? textLayer?.canvas;
 }

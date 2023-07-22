@@ -19,6 +19,7 @@ class TextLayer extends Layer with TextData {
 
     _focused = focused;
     if (focused) {
+      _isCreation = false;
       _bufferedText = text;
       _bufferedFontSize = fontSize;
     } else if (_bufferedText != null && _bufferedFontSize != null) {
@@ -93,7 +94,7 @@ class TextLayer extends Layer with TextData {
     textElement
       ..x!.baseVal!.appendItem(_zeroLength)
       ..y!.baseVal!.appendItem(_zeroLength)
-      ..text = text
+      ..text = ''
       ..setAttribute('paint-order', 'stroke')
       ..setAttribute('text-anchor', 'middle')
       ..setAttribute('dominant-baseline', 'central');

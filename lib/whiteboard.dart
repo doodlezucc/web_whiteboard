@@ -363,7 +363,7 @@ class Whiteboard extends WhiteboardBase<DrawingLayer, TextLayer, PinLayer> {
         document.activeElement?.blur();
         moveStreamCtrl = StreamController.broadcast();
 
-        var action = Completer<Action>();
+        var action = Completer<Action?>();
 
         var first = fixedPoint(ev);
         if (eraser && mode == modeDraw && eraseAcrossLayers) {
