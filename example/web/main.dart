@@ -66,6 +66,7 @@ bool _handleKeyEvent(KeyboardEvent ev) {
       case 68:
         // D key
         whiteboard.mode = Whiteboard.modeDraw;
+        whiteboard.eraser = false;
         print('draw mode');
         return true;
 
