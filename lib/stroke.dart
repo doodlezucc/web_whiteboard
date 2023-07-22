@@ -1,23 +1,22 @@
 import 'dart:math';
 
-import 'package:web_whiteboard/binary.dart';
+import 'binary.dart';
 
 final _decimal = RegExp(r'^\d*\.?\d+');
 
 class Stroke implements Serializable {
-  List<Point<int>> points;
+  final List<Point<int>> points;
   String stroke;
   String strokeWidth;
 
-  num get strokeWidthNum => num.parse(_decimal.firstMatch(strokeWidth)[0]);
+  num get strokeWidthNum =>
+      num.parse(_decimal.firstMatch(strokeWidth)!.group(0)!);
 
   Stroke({
-    this.points,
-    this.stroke,
+    List<Point<int>>? points,
+    this.stroke = '#000000',
     this.strokeWidth = '1px',
-  }) {
-    points ??= [];
-  }
+  }) : points = points ?? [];
 
   void add(Point<int> p) {
     // Limit amount of points to fit into a UInt16

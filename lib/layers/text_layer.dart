@@ -2,40 +2,40 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:svg' as svg;
 
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/communication/binary_event.dart';
-import 'package:web_whiteboard/history.dart';
-import 'package:web_whiteboard/layers/text_data.dart';
-import 'package:web_whiteboard/layers/layer.dart';
-import 'package:web_whiteboard/whiteboard.dart';
+import '../binary.dart';
+import '../communication/binary_event.dart';
+import '../history.dart';
+import '../whiteboard.dart';
+import 'layer.dart';
+import 'text_data.dart';
 
 class TextLayer extends Layer with TextData {
-  svg.TextElement get textElement => layerEl;
+  svg.TextElement get textElement => layerEl as svg.TextElement;
 
-  bool _focused;
+  bool _focused = false;
   bool get focused => _focused;
   set focused(bool focused) {
-    if (!textElement.isConnected) return;
+    if (textElement.isConnected == false) return;
 
     _focused = focused;
     if (focused) {
       _bufferedText = text;
       _bufferedFontSize = fontSize;
-    } else {
+    } else if (_bufferedText != null && _bufferedFontSize != null) {
       text = text.trim();
 
       if (text.isEmpty) {
-        text = _bufferedText;
-        fontSize = _bufferedFontSize;
+        text = _bufferedText!;
+        fontSize = _bufferedFontSize!;
       } else if (text != _bufferedText || fontSize != _bufferedFontSize) {
         canvas.history.registerDoneAction(TextUpdateAction(
-            this, _bufferedText, text, _bufferedFontSize, fontSize));
+            this, _bufferedText!, text, _bufferedFontSize!, fontSize));
       }
     }
   }
 
-  String _bufferedText;
-  int _bufferedFontSize;
+  String? _bufferedText;
+  int? _bufferedFontSize;
 
   @override
   set fontSize(int fontSize) {
@@ -59,9 +59,9 @@ class TextLayer extends Layer with TextData {
       var span = svg.TSpanElement()
         // Empty lines wouldn't be displayed at all
         ..text = empty ? line = '_' : line
-        ..x.baseVal.appendItem(_zeroLength)
-        ..dy
-            .baseVal
+        ..x!.baseVal!.appendItem(_zeroLength)
+        ..dy!
+            .baseVal!
             .appendItem(canvas.root.createSvgLength()..valueAsString = '1.2em');
 
       if (empty) {
@@ -74,24 +74,25 @@ class TextLayer extends Layer with TextData {
 
   @override
   set position(Point position) {
-    var p = Point<int>(position.x, max(0, position.y));
+    var p = Point<int>(position.x.toInt(), max(0, position.y.toInt()));
 
     super.position = p;
     textElement
-      ..x.baseVal[0].value = p.x
-      ..y.baseVal[0].value = p.y;
+      ..x!.baseVal![0].value = p.x
+      ..y!.baseVal![0].value = p.y;
     textElement.children
         .whereType<svg.TSpanElement>()
-        .forEach((span) => span.x.baseVal[0].value = p.x);
+        .forEach((span) => span.x!.baseVal![0].value = p.x);
   }
 
-  svg.Length _zeroLength;
+  late svg.Length _zeroLength;
+  bool _isCreation = true;
 
   TextLayer(Whiteboard canvas) : super(canvas, svg.TextElement()) {
     _zeroLength = canvas.root.createSvgLength()..value = 0;
     textElement
-      ..x.baseVal.appendItem(_zeroLength)
-      ..y.baseVal.appendItem(_zeroLength)
+      ..x!.baseVal!.appendItem(_zeroLength)
+      ..y!.baseVal!.appendItem(_zeroLength)
       ..text = text
       ..setAttribute('paint-order', 'stroke')
       ..setAttribute('text-anchor', 'middle')
@@ -101,24 +102,24 @@ class TextLayer extends Layer with TextData {
   @override
   void loadFromBytes(BinaryReader reader) {
     super.loadFromBytes(reader);
-    _bufferedText = text; // important for determining creation state at [1]
+    _isCreation = false;
   }
 
-  bool get isCreation => _bufferedText == null; // [1]
+  bool get isCreation => _isCreation;
 
   @override
-  Future<Action> onMouseDown(Point first, Stream<Point> stream) async {
+  Future<Action?> onMouseDown(Point first, Stream<Point> stream) async {
     var creation = isCreation;
     var completer = Completer();
 
     var startPos = position;
     stream.listen((p) {
-      position = startPos + (p - first);
+      position = Point<num>(startPos.x, startPos.y) + (p - first);
     }, onDone: () => completer.complete(position));
 
     var endPos = await completer.future;
 
-    if (!textElement.isConnected) {
+    if (textElement.isConnected == false) {
       if (creation) {
         // Text element was deleted before being placed
         return null;
@@ -136,17 +137,18 @@ class TextLayer extends Layer with TextData {
 }
 
 mixin TextAction on Action {
-  TextLayer _layer;
-  TextLayer get layer => _layer;
+  TextLayer get layer;
 }
 
 class TextMoveAction extends Action with TextAction {
+  final TextLayer _layer;
   final Point<int> posA;
   final Point<int> posB;
 
-  TextMoveAction(TextLayer layer, this.posA, this.posB) {
-    _layer = layer;
-  }
+  @override
+  TextLayer get layer => _layer;
+
+  TextMoveAction(TextLayer layer, this.posA, this.posB) : _layer = layer;
 
   @override
   void doAction() {
@@ -172,15 +174,22 @@ class TextMoveAction extends Action with TextAction {
 }
 
 class TextUpdateAction extends Action with TextAction {
+  final TextLayer _layer;
   final String textA;
   final String textB;
   final int sizeA;
   final int sizeB;
 
+  @override
+  TextLayer get layer => _layer;
+
   TextUpdateAction(
-      TextLayer layer, this.textA, this.textB, this.sizeA, this.sizeB) {
-    _layer = layer;
-  }
+    TextLayer layer,
+    this.textA,
+    this.textB,
+    this.sizeA,
+    this.sizeB,
+  ) : _layer = layer;
 
   @override
   void doAction() {
@@ -211,12 +220,15 @@ class TextUpdateAction extends Action with TextAction {
 }
 
 class TextInstanceAction extends SingleAddRemoveAction with TextAction {
+  final TextLayer _layer;
   final Point<int> position;
 
+  @override
+  TextLayer get layer => _layer;
+
   TextInstanceAction(TextLayer layer, this.position, bool forward)
-      : super(forward) {
-    _layer = layer;
-  }
+      : _layer = layer,
+        super(forward);
 
   @override
   void create() {

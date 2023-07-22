@@ -4,20 +4,20 @@ import 'dart:html';
 import 'dart:math';
 import 'dart:svg' as svg;
 
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/communication/binary_event.dart';
-import 'package:web_whiteboard/history.dart';
-import 'package:web_whiteboard/layers/drawing_layer.dart';
-import 'package:web_whiteboard/layers/drawn_stroke.dart';
-import 'package:web_whiteboard/layers/layer.dart';
-import 'package:web_whiteboard/layers/pin_layer.dart';
-import 'package:web_whiteboard/layers/text_layer.dart';
-import 'package:web_whiteboard/stroke.dart';
-import 'package:web_whiteboard/util.dart';
-import 'package:web_whiteboard/communication/web_socket.dart';
-import 'package:web_whiteboard/whiteboard_data.dart';
+import 'binary.dart';
+import 'communication/binary_event.dart';
+import 'communication/web_socket.dart';
+import 'history.dart';
+import 'layers/drawing_layer.dart';
+import 'layers/drawn_stroke.dart';
+import 'layers/layer.dart';
+import 'layers/pin_layer.dart';
+import 'layers/text_layer.dart';
+import 'stroke.dart';
+import 'util.dart';
+import 'whiteboard_base.dart';
 
-class Whiteboard with WhiteboardData {
+class Whiteboard extends WhiteboardBase<DrawingLayer, TextLayer, PinLayer> {
   static const modeDraw = 'draw';
   static const modeText = 'text';
   static const modePin = 'pin';
@@ -31,7 +31,10 @@ class Whiteboard with WhiteboardData {
   final _fontSizeInput = InputElement(type: 'number');
   final textRemoveButton = ButtonElement();
   final history = History();
-  final socket = WhiteboardSocket();
+  late WhiteboardSocket socket;
+
+  late PinLayer _pin;
+  PinLayer get pin => _pin;
 
   bool eraser = false;
   bool eraseAcrossLayers = false;
@@ -45,9 +48,9 @@ class Whiteboard with WhiteboardData {
 
   DrawingLayer get layer => layers[layerIndex];
 
-  TextLayer selectedText;
+  TextLayer? selectedText;
 
-  String _mode;
+  late String _mode;
   String get mode => _mode;
   set mode(String mode) {
     _mode = mode;
@@ -69,10 +72,9 @@ class Whiteboard with WhiteboardData {
     _initCursorControls();
     _initKeyListener();
     mode = modeDraw;
-    pin = PinLayer(this);
-    socket
-      ..whiteboard = this
-      ..prefix = webSocketPrefix;
+    _pin = PinLayer(this);
+
+    socket = WhiteboardSocket(whiteboard: this, prefix: webSocketPrefix);
   }
 
   Future<void> loadFromBlob(Blob blob) async {
@@ -128,7 +130,7 @@ class Whiteboard with WhiteboardData {
   @override
   void clear({bool sendEvent = true, bool deleteLayers = false}) {
     for (var t in texts) {
-      (t as Layer).dispose();
+      t.dispose();
     }
     texts.clear();
     pin.visible = false;
@@ -136,12 +138,12 @@ class Whiteboard with WhiteboardData {
 
     if (deleteLayers) {
       for (var l in layers) {
-        (l as Layer).dispose();
+        l.dispose();
       }
       layers.clear();
     } else {
       for (var l in layers) {
-        (l as DrawingLayer).onClear();
+        l.onClear();
       }
     }
 
@@ -153,7 +155,7 @@ class Whiteboard with WhiteboardData {
   Future<void> changeBackground(String src) async {
     _img.setAttribute('src', src);
     await _img.onLoad.first;
-    _background.href.baseVal = src;
+    _background.href!.baseVal = src;
     updateScaling();
   }
 
@@ -167,11 +169,11 @@ class Whiteboard with WhiteboardData {
     var zoomY = h / _img.naturalHeight;
     _zoomCorrection = min(zoomX, zoomY);
 
-    if (root.viewBox.baseVal == null) {
+    if (root.viewBox?.baseVal == null) {
       root.setAttribute('viewBox', '0 0 100 100');
     }
 
-    root.viewBox.baseVal
+    root.viewBox!.baseVal!
       ..width = w / _zoomCorrection
       ..height = h / _zoomCorrection;
   }
@@ -208,8 +210,8 @@ class Whiteboard with WhiteboardData {
           ..onClick.listen((_) => _removeSelectedText())));
 
     root
-      ..width.baseVal.valueAsString = '100%'
-      ..height.baseVal.valueAsString = '100%'
+      ..width!.baseVal!.valueAsString = '100%'
+      ..height!.baseVal!.valueAsString = '100%'
       ..append(_background);
     _container
       ..append(root)
@@ -219,10 +221,11 @@ class Whiteboard with WhiteboardData {
 
   void _initTextControls() {
     _textInput.onInput.listen((ev) {
-      selectedText?.text = _textInput.value;
+      selectedText?.text = _textInput.value ?? '';
     });
     _fontSizeInput.onInput.listen((ev) {
-      selectedText?.fontSize = _fontSizeInput.valueAsNumber ?? defaultFontSize;
+      selectedText?.fontSize =
+          _fontSizeInput.valueAsNumber?.toInt() ?? defaultFontSize;
     });
   }
 
@@ -230,11 +233,11 @@ class Whiteboard with WhiteboardData {
 
   void _initKeyListener() {
     window.onKeyDown.listen((ev) {
-      if (captureInput && !_isInput(ev.target)) {
+      if (captureInput && !_isInput(ev.target as Element)) {
         switch (ev.key) {
           case 'Delete':
           case 'Backspace':
-            if (mode == modePin) return (pin as PinLayer).hide();
+            if (mode == modePin) return pin.hide();
 
             return _removeSelectedText();
         }
@@ -254,10 +257,12 @@ class Whiteboard with WhiteboardData {
   }
 
   void _removeSelectedText() {
-    if (selectedText != null) {
-      var register = !selectedText.isCreation;
+    final text = selectedText;
+
+    if (text != null) {
+      var register = !text.isCreation;
       history.perform(
-        TextInstanceAction(selectedText, selectedText.position, false),
+        TextInstanceAction(text, text.position, false),
         register,
       );
       _onTextDeselect();
@@ -300,7 +305,7 @@ class Whiteboard with WhiteboardData {
   }
 
   void _initCursorControls() {
-    StreamController<Point<int>> moveStreamCtrl;
+    StreamController<Point<int>>? moveStreamCtrl;
 
     void listenToCursorEvents<T extends Event>(
       Point Function(T ev) evToPoint,
@@ -313,15 +318,20 @@ class Whiteboard with WhiteboardData {
 
       startEvent.listen((ev) async {
         if (!captureInput ||
-            _isInput(ev.target) ||
+            _isInput(ev.target as Element) ||
             !ev.path.any((e) => e == root) ||
             !useStartEvent(ev)) return;
 
-        Layer layer = mode == modeDraw ? this.layer : (pin as PinLayer);
+        Layer layer;
+        if (mode == modeDraw) {
+          layer = this.layer;
+        } else {
+          layer = pin;
+        }
 
         if (mode == modeText) {
-          var textTarget = ev.path
-              .firstWhere((e) => e is svg.TextElement, orElse: () => null);
+          var textTarget =
+              ev.path.firstWhereOrNull((e) => e is svg.TextElement);
 
           if (selectedText != null && textTarget == null) {
             if (!ev.path.any((e) => e == _textControls)) {
@@ -346,11 +356,11 @@ class Whiteboard with WhiteboardData {
               ..text = 'Text';
           }
           _onTextDeselect();
-          selectedText = layer;
+          selectedText = layer as TextLayer;
         }
 
         ev.preventDefault();
-        document.activeElement.blur();
+        document.activeElement?.blur();
         moveStreamCtrl = StreamController.broadcast();
 
         var action = Completer<Action>();
@@ -364,14 +374,13 @@ class Whiteboard with WhiteboardData {
             strokesBefore[l] = List.from(l.strokes);
           }
 
-          var combinedEraseStream = Future.wait(layers.map((l) =>
-              (l as DrawingLayer)
-                  .handleEraseStream(first, moveStreamCtrl.stream)));
+          var combinedEraseStream = Future.wait(layers
+              .map((l) => l.handleEraseStream(first, moveStreamCtrl!.stream)));
 
           unawaited(combinedEraseStream.then((actions) {
             var combinedErased = <DrawnStroke>[];
 
-            for (StrokeAction a in actions) {
+            for (StrokeAction? a in actions) {
               if (a != null) {
                 combinedErased
                     .addAll(a.list.map((s) => DrawnStroke(a.layer, s)));
@@ -384,17 +393,17 @@ class Whiteboard with WhiteboardData {
           }));
         } else {
           // Other mouse actions
-          unawaited(layer.onMouseDown(first, moveStreamCtrl.stream).then((a) {
+          unawaited(layer.onMouseDown(first, moveStreamCtrl!.stream).then((a) {
             action.complete(a);
           }));
         }
 
         await endEvent.first;
-        await moveStreamCtrl.close();
+        await moveStreamCtrl!.close();
         moveStreamCtrl = null;
 
-        if (mode == modeText && layer.layerEl.isConnected) {
-          _onTextSelect(layer);
+        if (mode == modeText && layer.layerEl.isConnected == true) {
+          _onTextSelect(layer as TextLayer);
         }
 
         history.registerDoneAction(await action.future);
@@ -404,7 +413,7 @@ class Whiteboard with WhiteboardData {
         if (moveStreamCtrl != null &&
             !(mode == modeText &&
                 !(ev as dynamic).path.any((e) => e == root))) {
-          moveStreamCtrl.add(fixedPoint(ev));
+          moveStreamCtrl!.add(fixedPoint(ev));
         }
       });
     }
@@ -416,7 +425,7 @@ class Whiteboard with WhiteboardData {
         window.onMouseUp);
 
     listenToCursorEvents<TouchEvent>(
-        (ev) => ev.targetTouches[0].page - _container.documentOffset,
+        (ev) => ev.targetTouches![0].page - _container.documentOffset,
         root.onTouchStart,
         window.onTouchMove,
         window.onTouchEnd);

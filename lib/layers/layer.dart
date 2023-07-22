@@ -1,9 +1,9 @@
 import 'dart:html';
 import 'dart:svg' as svg;
 
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/history.dart';
-import 'package:web_whiteboard/whiteboard.dart';
+import '../binary.dart';
+import '../history.dart';
+import '../whiteboard.dart';
 
 abstract class Layer {
   final Whiteboard canvas;
@@ -14,7 +14,7 @@ abstract class Layer {
     canvas.root.append(layerEl);
   }
 
-  Future<Action> onMouseDown(Point<int> first, Stream<Point<int>> moveStream);
+  Future<Action?> onMouseDown(Point<int> first, Stream<Point<int>> moveStream);
 
   void dispose() {
     layerEl.remove();

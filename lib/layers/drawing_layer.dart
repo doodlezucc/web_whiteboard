@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:html';
 import 'dart:svg' as svg;
 
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/communication/binary_event.dart';
-import 'package:web_whiteboard/history.dart';
-import 'package:web_whiteboard/layers/drawing_data.dart';
-import 'package:web_whiteboard/layers/drawn_stroke.dart';
-import 'package:web_whiteboard/layers/layer.dart';
-import 'package:web_whiteboard/stroke.dart';
-import 'package:web_whiteboard/util.dart';
-import 'package:web_whiteboard/whiteboard.dart';
+import '../binary.dart';
+import '../communication/binary_event.dart';
+import '../history.dart';
+import '../stroke.dart';
+import '../util.dart';
+import '../whiteboard.dart';
+import 'drawing_data.dart';
+import 'drawn_stroke.dart';
+import 'layer.dart';
 
 class DrawingLayer extends Layer with DrawingData {
   final _pathData = <svg.PathElement, Stroke>{};
@@ -19,7 +19,7 @@ class DrawingLayer extends Layer with DrawingData {
   DrawingLayer(Whiteboard canvas) : super(canvas, svg.GElement());
 
   @override
-  Future<Action> onMouseDown(Point first, Stream<Point> stream) {
+  Future<Action?> onMouseDown(Point first, Stream<Point> stream) {
     if (canvas.eraser) {
       return handleEraseStream(first, stream);
     } else {
@@ -35,7 +35,7 @@ class DrawingLayer extends Layer with DrawingData {
     return pathEl;
   }
 
-  Future<Action> _handleDrawStream(Point first, Stream<Point> stream) async {
+  Future<Action?> _handleDrawStream(Point first, Stream<Point> stream) async {
     // Prevent drawing new lines if limit of 255 strokes is reached
     if (strokes.length >= 0xFF) return null;
 
@@ -43,7 +43,7 @@ class DrawingLayer extends Layer with DrawingData {
     var completer = Completer();
 
     var path = Stroke(
-      points: [first],
+      points: [Point(first.x.toInt(), first.y.toInt())],
       stroke: canvas.activeColor,
       strokeWidth: '5px',
     );
@@ -56,7 +56,7 @@ class DrawingLayer extends Layer with DrawingData {
 
     stream.listen((p) {
       if (p.squaredDistanceTo(lastDraw) > minDistanceSquared) {
-        path.add(p);
+        path.add(Point(p.x.toInt(), p.y.toInt()));
         applyStroke(path, pathEl);
         lastDraw = p;
       }
@@ -81,7 +81,7 @@ class DrawingLayer extends Layer with DrawingData {
 
     for (svg.PathElement path in paths) {
       if (path.isPointInStroke(svgPoint)) {
-        erased.add(_pathData[path]);
+        erased.add(_pathData[path]!);
         _erase(path);
       }
     }
@@ -89,7 +89,8 @@ class DrawingLayer extends Layer with DrawingData {
     return erased;
   }
 
-  Future<Action> handleEraseStream(Point first, Stream<Point> stream) async {
+  Future<StrokeAction?> handleEraseStream(
+      Point first, Stream<Point> stream) async {
     var copy = List<Stroke>.from(strokes);
     var erased = <Stroke>[];
 
@@ -107,7 +108,7 @@ class DrawingLayer extends Layer with DrawingData {
   }
 
   void onClear() {
-    for (svg.PathElement path in layerEl.children) {
+    for (var path in layerEl.children) {
       path.remove();
     }
     strokes.clear();
@@ -206,7 +207,7 @@ class StrokeAcrossAction extends AddRemoveAction<DrawnStroke> {
     if (userCreated) {
       var event = BinaryEvent(9)..writeUInt8(list.length);
       list.forEach((s) {
-        var bufferedIndex = strokesBefore[s.layer].indexOf(s.stroke);
+        var bufferedIndex = strokesBefore[s.layer]!.indexOf(s.stroke);
         var realIndex = s.layer.strokes.indexOf(s.stroke);
         event.writeUInt8(s.layer.indexInWhiteboard);
         event.writeUInt8(realIndex == -1 ? bufferedIndex : realIndex);
