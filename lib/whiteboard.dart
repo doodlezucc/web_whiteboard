@@ -6,6 +6,7 @@ import 'dart:svg' as svg;
 
 import 'binary.dart';
 import 'communication/binary_event.dart';
+import 'communication/event_type.dart';
 import 'communication/web_socket.dart';
 import 'history.dart';
 import 'layers/drawing_layer.dart';
@@ -148,7 +149,7 @@ class Whiteboard extends WhiteboardBase<DrawingLayer, TextLayer, PinLayer> {
     }
 
     if (sendEvent) {
-      socket.send(BinaryEvent(7)..writeBool(deleteLayers));
+      socket.send(BinaryEvent(EventType.clear)..writeBool(deleteLayers));
     }
   }
 

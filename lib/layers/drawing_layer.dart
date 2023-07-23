@@ -4,6 +4,7 @@ import 'dart:svg' as svg;
 
 import '../binary.dart';
 import '../communication/binary_event.dart';
+import '../communication/event_type.dart';
 import '../history.dart';
 import '../stroke.dart';
 import '../util.dart';
@@ -139,7 +140,9 @@ class StrokeAction extends AddRemoveAction<Stroke> {
 
   void _sendDrawEvent() {
     if (userCreated) {
-      var event = BinaryEvent(0, drawingLayer: layer)..writeUInt8(list.length);
+      final event = BinaryEvent(EventType.strokeCreate, drawingLayer: layer)
+        ..writeUInt8(list.length);
+
       list.forEach((s) => s.writeToBytes(event));
       layer.canvas.socket.send(event);
     }
@@ -194,7 +197,9 @@ class StrokeAcrossAction extends AddRemoveAction<DrawnStroke> {
 
   void _sendDrawEvent() {
     if (userCreated) {
-      var event = BinaryEvent(8)..writeUInt8(list.length);
+      final event = BinaryEvent(EventType.strokeMultipleCreate)
+        ..writeUInt8(list.length);
+
       list.forEach((s) {
         event.writeUInt8(s.layer.indexInWhiteboard);
         s.stroke.writeToBytes(event);
@@ -205,7 +210,9 @@ class StrokeAcrossAction extends AddRemoveAction<DrawnStroke> {
 
   void _sendEraseEvent() {
     if (userCreated) {
-      var event = BinaryEvent(9)..writeUInt8(list.length);
+      final event = BinaryEvent(EventType.strokeMultipleRemove)
+        ..writeUInt8(list.length);
+
       list.forEach((s) {
         var bufferedIndex = strokesBefore[s.layer]!.indexOf(s.stroke);
         var realIndex = s.layer.strokes.indexOf(s.stroke);

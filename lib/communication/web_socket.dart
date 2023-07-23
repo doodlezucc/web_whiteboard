@@ -10,6 +10,7 @@ import '../layers/text_layer.dart';
 import '../stroke.dart';
 import '../whiteboard.dart';
 import 'binary_event.dart';
+import 'event_type.dart';
 import 'socket_base.dart';
 
 class WhiteboardSocket extends SocketBase {
@@ -49,7 +50,7 @@ class WhiteboardSocket extends SocketBase {
     }
 
     switch (reader.readUInt8()) {
-      case 0:
+      case EventType.strokeCreate:
         var layer = getLayer();
         var strokes = <Stroke>[];
         var count = reader.readUInt8();
@@ -61,7 +62,7 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 1:
+      case EventType.strokeRemove:
         var layer = getLayer();
         var toRemove = <Stroke>[];
         var count = reader.readUInt8();
@@ -74,7 +75,7 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 2:
+      case EventType.textCreate:
         var position = reader.readPoint();
         var fontSize = reader.readUInt8();
         var text = reader.readString();
@@ -89,7 +90,7 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 3:
+      case EventType.textUpdateText:
         var layer = getText();
         var fontSize = reader.readUInt8();
         var text = reader.readString();
@@ -99,7 +100,7 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 4:
+      case EventType.textUpdatePosition:
         final textLayer = getText();
         final position = reader.readPoint();
 
@@ -108,7 +109,7 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 5:
+      case EventType.strokeRemove:
         final textLayer = getText();
         whiteboard.history.perform(
             TextInstanceAction(textLayer, textLayer.position, false)
@@ -116,15 +117,15 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 6:
+      case EventType.pinMove:
         whiteboard.pin.loadFromBytes(reader);
         return true;
 
-      case 7:
+      case EventType.clear:
         whiteboard.clear(sendEvent: false, deleteLayers: reader.readBool());
         return true;
 
-      case 8:
+      case EventType.strokeMultipleCreate:
         var strokeCount = reader.readUInt8();
         var strokes = <DrawnStroke>[];
         for (var i = 0; i < strokeCount; i++) {
@@ -135,7 +136,7 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 9:
+      case EventType.strokeMultipleRemove:
         var strokeCount = reader.readUInt8();
         var toRemove = <DrawnStroke>[];
         var affectedLayers = <DrawingLayer>{};

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:svg' as svg;
 
 import '../communication/binary_event.dart';
+import '../communication/event_type.dart';
 import '../history.dart';
 import '../util.dart';
 import '../whiteboard.dart';
@@ -59,7 +60,7 @@ class PinLayer extends Layer with PinData {
   }
 
   void sendUpdateEvent() {
-    canvas.socket.send(BinaryEvent(6)
+    canvas.socket.send(BinaryEvent(EventType.pinMove)
       ..writeBool(visible)
       ..writePoint(position));
   }

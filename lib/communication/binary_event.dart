@@ -4,17 +4,17 @@ import '../layers/text_layer.dart';
 import '../whiteboard.dart';
 
 class BinaryEvent extends BinaryWriter {
-  final int id;
+  final int eventType;
   final EventContext context;
 
   BinaryEvent(
-    this.id, {
+    this.eventType, {
     DrawingLayer? drawingLayer,
     TextLayer? textLayer,
     bool layerInclude = true,
   }) : context =
             EventContext(drawingLayer: drawingLayer, textLayer: textLayer) {
-    writeUInt8(id);
+    writeUInt8(eventType);
 
     if (layerInclude) {
       if (drawingLayer != null) {

@@ -4,6 +4,7 @@ import 'dart:svg' as svg;
 
 import '../binary.dart';
 import '../communication/binary_event.dart';
+import '../communication/event_type.dart';
 import '../history.dart';
 import '../whiteboard.dart';
 import 'layer.dart';
@@ -164,7 +165,8 @@ class TextMoveAction extends Action with TextAction {
   void _send(bool forward) {
     if (userCreated) {
       layer.canvas.socket.send(
-          BinaryEvent(4, textLayer: layer)..writePoint(forward ? posB : posA));
+          BinaryEvent(EventType.textUpdatePosition, textLayer: layer)
+            ..writePoint(forward ? posB : posA));
     }
   }
 }
@@ -208,7 +210,10 @@ class TextUpdateAction extends Action with TextAction {
 
   void _send(bool forward) {
     if (userCreated) {
-      layer.canvas.socket.send(BinaryEvent(3, textLayer: layer)
+      layer.canvas.socket.send(BinaryEvent(
+        EventType.textUpdateText,
+        textLayer: layer,
+      )
         ..writeUInt8(forward ? sizeB : sizeA)
         ..writeString(forward ? textB : textA));
     }
@@ -247,17 +252,18 @@ class TextInstanceAction extends SingleAddRemoveAction with TextAction {
 
   void _sendCreate() {
     if (userCreated) {
-      layer.canvas.socket
-          .send(BinaryEvent(2, textLayer: layer, layerInclude: false)
-            ..writePoint(position)
-            ..writeUInt8(layer.fontSize)
-            ..writeString(layer.text));
+      layer.canvas.socket.send(BinaryEvent(EventType.textCreate,
+          textLayer: layer, layerInclude: false)
+        ..writePoint(position)
+        ..writeUInt8(layer.fontSize)
+        ..writeString(layer.text));
     }
   }
 
   void _sendDelete() {
     if (userCreated) {
-      layer.canvas.socket.send(BinaryEvent(5, textLayer: layer));
+      layer.canvas.socket
+          .send(BinaryEvent(EventType.textRemove, textLayer: layer));
     }
   }
 }
