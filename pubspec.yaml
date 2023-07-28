@@ -1,6 +1,6 @@
 name: web_whiteboard
 description: A whiteboard to draw on in the web.
-version: 1.0.1
+version: 1.1.0
 
 environment:
   sdk: ">=2.15.0 <4.0.0"
