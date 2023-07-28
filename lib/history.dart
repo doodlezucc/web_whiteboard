@@ -29,10 +29,10 @@ abstract class Action {
 
 class History {
   final List<Action> _stack = [];
-  final _streamCtrl = StreamController<Action>.broadcast();
+  final _streamCtrl = StreamController<Action?>.broadcast();
   int _actionsDone = 0;
 
-  Stream<Action> get onChange => _streamCtrl.stream;
+  Stream<Action?> get onChange => _streamCtrl.stream;
   Iterable<Action> get stack => _stack;
   int get positionInStack => _actionsDone;
   bool get canRedo => _actionsDone < _stack.length;
@@ -45,7 +45,7 @@ class History {
     }
   }
 
-  void registerDoneAction(Action a) {
+  void registerDoneAction(Action? a) {
     if (a == null) return;
 
     a._isDone = true;

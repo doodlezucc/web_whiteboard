@@ -1,20 +1,20 @@
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/layers/drawing_layer.dart';
-import 'package:web_whiteboard/layers/text_layer.dart';
-import 'package:web_whiteboard/whiteboard.dart';
+import '../binary.dart';
+import '../layers/drawing_layer.dart';
+import '../layers/text_layer.dart';
+import '../whiteboard.dart';
 
 class BinaryEvent extends BinaryWriter {
-  final int id;
+  final int eventType;
   final EventContext context;
 
   BinaryEvent(
-    this.id, {
-    DrawingLayer drawingLayer,
-    TextLayer textLayer,
+    this.eventType, {
+    DrawingLayer? drawingLayer,
+    TextLayer? textLayer,
     bool layerInclude = true,
   }) : context =
             EventContext(drawingLayer: drawingLayer, textLayer: textLayer) {
-    writeUInt8(id);
+    writeUInt8(eventType);
 
     if (layerInclude) {
       if (drawingLayer != null) {
@@ -25,15 +25,16 @@ class BinaryEvent extends BinaryWriter {
     }
   }
 
-  void _writeLayerIndex() => writeUInt8(context.drawingLayer.indexInWhiteboard);
+  void _writeLayerIndex() =>
+      writeUInt8(context.drawingLayer!.indexInWhiteboard);
   void _writeTextIndex() =>
-      writeUInt8(context.whiteboard.texts.indexOf(context.textLayer));
+      writeUInt8(context.whiteboard!.texts.indexOf(context.textLayer!));
 }
 
 class EventContext {
-  final Whiteboard whiteboard;
-  final DrawingLayer drawingLayer;
-  final TextLayer textLayer;
+  final Whiteboard? whiteboard;
+  final DrawingLayer? drawingLayer;
+  final TextLayer? textLayer;
 
   EventContext({this.drawingLayer, this.textLayer})
       : whiteboard = drawingLayer?.canvas ?? textLayer?.canvas;

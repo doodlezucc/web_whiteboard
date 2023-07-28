@@ -1,16 +1,12 @@
 name: web_whiteboard
 description: A whiteboard to draw on in the web.
-version: 1.0.1
-#homepage: https://www.example.com
+version: 1.1.0
 
 environment:
-  sdk: '>=2.10.0 <3.0.0'
-
-#dependencies:
-#  path: ^1.7.0
+  sdk: ">=2.15.0 <4.0.0"
 
 dev_dependencies:
   build_runner: ^2.1.7
-  build_web_compilers: ^3.2.2
-  lint: ^1.8.2
+  build_web_compilers: ^4.0.4
+  lint: ^2.1.2
   test: ^1.17.3

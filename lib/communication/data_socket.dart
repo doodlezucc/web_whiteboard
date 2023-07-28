@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/communication/socket_base.dart';
-import 'package:web_whiteboard/layers/drawing_data.dart';
-import 'package:web_whiteboard/layers/text_data.dart';
-import 'package:web_whiteboard/stroke.dart';
-import 'package:web_whiteboard/whiteboard_data.dart';
+import '../binary.dart';
+import '../layers/drawing_data.dart';
+import '../layers/text_data.dart';
+import '../stroke.dart';
+import '../whiteboard_data.dart';
+import 'event_type.dart';
+import 'socket_base.dart';
 
 class WhiteboardDataSocket extends SocketBase {
   final WhiteboardData whiteboard;
@@ -25,7 +26,7 @@ class WhiteboardDataSocket extends SocketBase {
     TextData getText() => whiteboard.texts[reader.readUInt8()];
 
     switch (reader.readUInt8()) {
-      case 0:
+      case EventType.strokeCreate:
         var layer = getLayer();
         var count = reader.readUInt8();
         for (var i = 0; i < count; i++) {
@@ -33,7 +34,7 @@ class WhiteboardDataSocket extends SocketBase {
         }
         return true;
 
-      case 1:
+      case EventType.strokeRemove:
         var layer = getLayer();
         var toRemove = <Stroke>[];
         var count = reader.readUInt8();
@@ -44,48 +45,43 @@ class WhiteboardDataSocket extends SocketBase {
         toRemove.forEach((s) => layer.strokes.remove(s));
         return true;
 
-      case 2:
+      case EventType.textCreate:
         whiteboard.texts.add(TextData()
           ..position = reader.readPoint()
           ..fontSize = reader.readUInt8()
           ..text = reader.readString());
         return true;
 
-      case 3:
-        try {
-          getText()
-            ..fontSize = reader.readUInt8()
-            ..text = reader.readString();
-        } on RangeError {
-          // Text at specified index was not created yet
-          return false;
-        }
+      case EventType.textUpdateText:
+        getText()
+          ..fontSize = reader.readUInt8()
+          ..text = reader.readString();
         return true;
 
-      case 4:
+      case EventType.textUpdatePosition:
         getText().position = reader.readPoint();
         return true;
 
-      case 5:
+      case EventType.textRemove:
         whiteboard.texts.remove(getText());
         return true;
 
-      case 6:
+      case EventType.pinMove:
         whiteboard.pin.loadFromBytes(reader);
         return true;
 
-      case 7:
+      case EventType.clear:
         whiteboard.clear(deleteLayers: reader.readBool());
         return true;
 
-      case 8:
+      case EventType.strokeMultipleCreate:
         var strokeCount = reader.readUInt8();
         for (var i = 0; i < strokeCount; i++) {
           getLayer().strokes.add(Stroke()..loadFromBytes(reader));
         }
         return true;
 
-      case 9:
+      case EventType.strokeMultipleRemove:
         var strokeCount = reader.readUInt8();
         var toRemove = <DrawingData, List<Stroke>>{};
         for (var i = 0; i < strokeCount; i++) {

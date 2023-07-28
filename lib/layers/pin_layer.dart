@@ -2,15 +2,16 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:svg' as svg;
 
-import 'package:web_whiteboard/communication/binary_event.dart';
-import 'package:web_whiteboard/history.dart';
-import 'package:web_whiteboard/layers/layer.dart';
-import 'package:web_whiteboard/layers/pin_data.dart';
-import 'package:web_whiteboard/util.dart';
-import 'package:web_whiteboard/whiteboard.dart';
+import '../communication/binary_event.dart';
+import '../communication/event_type.dart';
+import '../history.dart';
+import '../util.dart';
+import '../whiteboard.dart';
+import 'layer.dart';
+import 'pin_data.dart';
 
 class PinLayer extends Layer with PinData {
-  svg.CircleElement get pinElement => layerEl;
+  svg.CircleElement get pinElement => layerEl as svg.CircleElement;
 
   @override
   set visible(bool visible) {
@@ -23,18 +24,18 @@ class PinLayer extends Layer with PinData {
     var p = forceIntPoint(position);
     super.position = p;
     pinElement
-      ..cx.baseVal.value = p.x
-      ..cy.baseVal.value = p.y;
+      ..cx!.baseVal!.value = p.x
+      ..cy!.baseVal!.value = p.y;
   }
 
   PinLayer(Whiteboard canvas) : super(canvas, svg.CircleElement()) {
     pinElement
       ..id = 'whiteboardPin'
-      ..r.baseVal.value = 25;
+      ..r!.baseVal!.value = 25;
   }
 
   @override
-  Future<Action> onMouseDown(Point first, Stream<Point> stream) async {
+  Future<Action?> onMouseDown(Point first, Stream<Point> stream) async {
     var completer = Completer();
     visible = true;
 
@@ -59,7 +60,7 @@ class PinLayer extends Layer with PinData {
   }
 
   void sendUpdateEvent() {
-    canvas.socket.send(BinaryEvent(6)
+    canvas.socket.send(BinaryEvent(EventType.pinMove)
       ..writeBool(visible)
       ..writePoint(position));
   }

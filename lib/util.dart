@@ -16,5 +16,15 @@ Point<int> forceIntPoint(Point p) {
 }
 
 Point<double> forceDoublePoint(Point p) {
-  return Point<double>(p.x, p.y);
+  return Point<double>(p.x.toDouble(), p.y.toDouble());
+}
+
+extension IterableExtension<E> on Iterable<E> {
+  E? firstWhereOrNull(bool test(E element)) {
+    try {
+      return firstWhere(test);
+    } on StateError {
+      return null;
+    }
+  }
 }

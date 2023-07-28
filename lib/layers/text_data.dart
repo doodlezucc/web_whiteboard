@@ -1,11 +1,11 @@
 import 'dart:math';
 
-import 'package:web_whiteboard/binary.dart';
+import '../binary.dart';
 
 class TextData implements Serializable {
-  Point<int> position;
-  int fontSize;
-  String text;
+  late Point<int> position;
+  late int fontSize;
+  late String text;
 
   @override
   void writeToBytes(BinaryWriter writer) {

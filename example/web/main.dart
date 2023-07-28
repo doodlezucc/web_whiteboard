@@ -7,10 +7,14 @@ import 'dart/client_websocket.dart';
 
 final clientSocket = ClientWebsocket();
 
-const src =
+const backgroundUrl =
     'https://i.pinimg.com/originals/cc/2a/28/cc2a2884782eca399299b3243ce66231.jpg';
-final whiteboard = Whiteboard(querySelector('#canvas'), webSocketPrefix: '%wb')
-  ..changeBackground(src)
+
+final whiteboard = Whiteboard(
+  querySelector('#canvas') as HtmlElement,
+  webSocketPrefix: '%wb',
+)
+  ..changeBackground(backgroundUrl)
   ..socket.sendStream.listen((data) => clientSocket.send(data));
 
 void main() {
@@ -31,16 +35,20 @@ void _initWhiteboardShortcuts() {
 }
 
 void _initLayerInput() {
-  InputElement input = querySelector('input[type=range]');
+  final input = querySelector('input[type=range]') as InputElement;
   input.onInput.listen((_) {
-    whiteboard.layerIndex = min(max(input.valueAsNumber, 0), 10);
+    final value = input.valueAsNumber;
+
+    if (value != null) {
+      whiteboard.layerIndex = min(max(value.toInt(), 0), 10);
+    }
   });
 }
 
 void _initColorInput() {
-  InputElement input = querySelector('input[type=color]');
+  final input = querySelector('input[type=color]') as InputElement;
   input.onInput.listen((_) {
-    whiteboard.activeColor = input.value;
+    whiteboard.activeColor = input.value!;
   });
 }
 
@@ -58,6 +66,7 @@ bool _handleKeyEvent(KeyboardEvent ev) {
       case 68:
         // D key
         whiteboard.mode = Whiteboard.modeDraw;
+        whiteboard.eraser = false;
         print('draw mode');
         return true;
 

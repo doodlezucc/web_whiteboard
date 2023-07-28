@@ -5,23 +5,23 @@ import 'package:web_whiteboard/binary.dart';
 import 'package:web_whiteboard/whiteboard.dart';
 
 void main() {
-  var src =
+  final src =
       'https://i.pinimg.com/originals/cc/2a/28/cc2a2884782eca399299b3243ce66231.jpg';
 
-  var canvas = Whiteboard(querySelector('#canvas'))
+  final canvas = Whiteboard(querySelector('#canvas') as HtmlElement)
     ..changeBackground(src)
     ..addDrawingLayer()
     ..addDrawingLayer()
     ..addDrawingLayer()
     ..addDrawingLayer()
     ..eraseAcrossLayers = true;
-  var canvas2 = Whiteboard(querySelector('#canvasClone'))
+  final canvas2 = Whiteboard(querySelector('#canvasClone') as HtmlElement)
     ..captureInput = false
     ..changeBackground(src);
 
   // You don't need a <canvas> element for whiteboards. In this example,
   // htmlCanvas is only used to test the "Whiteboard.drawToCanvas" function.
-  CanvasElement htmlCanvas = querySelector('canvas');
+  final htmlCanvas = querySelector('canvas') as CanvasElement;
 
   window.onKeyDown.listen((ev) {
     if (ev.target is TextAreaElement) return;

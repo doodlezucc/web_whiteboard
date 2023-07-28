@@ -4,7 +4,7 @@ import 'dart:html';
 import '../main.dart';
 
 class ClientWebsocket {
-  WebSocket _webSocket;
+  WebSocket? _webSocket;
 
   void connect() async {
     _webSocket = WebSocket('ws://localhost:7070/ws');
@@ -20,9 +20,15 @@ class ClientWebsocket {
     });
   }
 
-  Stream get messageStream => _webSocket.onMessage.map((event) => event.data);
+  Stream get messageStream {
+    if (_webSocket == null) {
+      throw 'Websocket not connected';
+    }
+
+    return _webSocket!.onMessage.map((event) => event.data);
+  }
 
   Future<void> send(data) async {
-    _webSocket.send(data);
+    _webSocket?.send(data);
   }
 }

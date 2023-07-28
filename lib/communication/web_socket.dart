@@ -3,14 +3,15 @@ import 'dart:html';
 
 import 'dart:typed_data';
 
-import 'package:web_whiteboard/binary.dart';
-import 'package:web_whiteboard/communication/binary_event.dart';
-import 'package:web_whiteboard/communication/socket_base.dart';
-import 'package:web_whiteboard/layers/drawing_layer.dart';
-import 'package:web_whiteboard/layers/drawn_stroke.dart';
-import 'package:web_whiteboard/layers/text_layer.dart';
-import 'package:web_whiteboard/stroke.dart';
-import 'package:web_whiteboard/whiteboard.dart';
+import '../binary.dart';
+import '../layers/drawing_layer.dart';
+import '../layers/drawn_stroke.dart';
+import '../layers/text_layer.dart';
+import '../stroke.dart';
+import '../whiteboard.dart';
+import 'binary_event.dart';
+import 'event_type.dart';
+import 'socket_base.dart';
 
 class WhiteboardSocket extends SocketBase {
   Whiteboard whiteboard;
@@ -21,7 +22,8 @@ class WhiteboardSocket extends SocketBase {
   /// `prefix` may define a string prepended to incoming and outgoing events.
   /// Keep it unique so whiteboard messages don't mix up with other traffic
   /// on your websocket.
-  WhiteboardSocket({this.whiteboard, String prefix = ''}) : super(prefix);
+  WhiteboardSocket({required this.whiteboard, String prefix = ''})
+      : super(prefix);
 
   void send(BinaryEvent event) {
     var bytes = Uint8List.fromList(prefixBytes + event.takeBytes());
@@ -37,13 +39,18 @@ class WhiteboardSocket extends SocketBase {
   bool handleEventBytes(Uint8List bytes) {
     if (!matchPrefix(bytes)) return false;
 
-    var reader = BinaryReader(bytes.sublist(prefixBytes.length).buffer);
+    final reader = BinaryReader(bytes.sublist(prefixBytes.length).buffer);
 
-    DrawingLayer getLayer() => whiteboard.layers[reader.readUInt8()];
-    TextLayer getText() => whiteboard.texts[reader.readUInt8()];
+    DrawingLayer getLayer() {
+      return whiteboard.layers[reader.readUInt8()];
+    }
+
+    TextLayer getText() {
+      return whiteboard.texts[reader.readUInt8()];
+    }
 
     switch (reader.readUInt8()) {
-      case 0:
+      case EventType.strokeCreate:
         var layer = getLayer();
         var strokes = <Stroke>[];
         var count = reader.readUInt8();
@@ -51,11 +58,11 @@ class WhiteboardSocket extends SocketBase {
           strokes.add(Stroke()..loadFromBytes(reader));
         }
         whiteboard.history.perform(
-            StrokeAction(layer, true, strokes, null)..userCreated = false,
+            StrokeAction(layer, true, strokes, const [])..userCreated = false,
             false);
         return true;
 
-      case 1:
+      case EventType.strokeRemove:
         var layer = getLayer();
         var toRemove = <Stroke>[];
         var count = reader.readUInt8();
@@ -64,11 +71,11 @@ class WhiteboardSocket extends SocketBase {
           toRemove.add(layer.strokes[index]);
         }
         whiteboard.history.perform(
-            StrokeAction(layer, false, toRemove, null)..userCreated = false,
+            StrokeAction(layer, false, toRemove, const [])..userCreated = false,
             false);
         return true;
 
-      case 2:
+      case EventType.textCreate:
         var position = reader.readPoint();
         var fontSize = reader.readUInt8();
         var text = reader.readString();
@@ -83,49 +90,53 @@ class WhiteboardSocket extends SocketBase {
             false);
         return true;
 
-      case 3:
+      case EventType.textUpdateText:
         var layer = getText();
         var fontSize = reader.readUInt8();
         var text = reader.readString();
         whiteboard.history.perform(
-            TextUpdateAction(layer, null, text, null, fontSize)
+            TextUpdateAction(layer, text, text, fontSize, fontSize)
               ..userCreated = false,
             false);
         return true;
 
-      case 4:
+      case EventType.textUpdatePosition:
+        final textLayer = getText();
+        final position = reader.readPoint();
+
         whiteboard.history.perform(
-            TextMoveAction(getText(), null, reader.readPoint())
+            TextMoveAction(textLayer, position, position)..userCreated = false,
+            false);
+        return true;
+
+      case EventType.strokeRemove:
+        final textLayer = getText();
+        whiteboard.history.perform(
+            TextInstanceAction(textLayer, textLayer.position, false)
               ..userCreated = false,
             false);
         return true;
 
-      case 5:
-        whiteboard.history.perform(
-            TextInstanceAction(getText(), null, false)..userCreated = false,
-            false);
-        return true;
-
-      case 6:
+      case EventType.pinMove:
         whiteboard.pin.loadFromBytes(reader);
         return true;
 
-      case 7:
+      case EventType.clear:
         whiteboard.clear(sendEvent: false, deleteLayers: reader.readBool());
         return true;
 
-      case 8:
+      case EventType.strokeMultipleCreate:
         var strokeCount = reader.readUInt8();
         var strokes = <DrawnStroke>[];
         for (var i = 0; i < strokeCount; i++) {
           strokes.add(DrawnStroke(getLayer(), Stroke()..loadFromBytes(reader)));
         }
         whiteboard.history.perform(
-            StrokeAcrossAction(true, strokes, null)..userCreated = false,
+            StrokeAcrossAction(true, strokes, const {})..userCreated = false,
             false);
         return true;
 
-      case 9:
+      case EventType.strokeMultipleRemove:
         var strokeCount = reader.readUInt8();
         var toRemove = <DrawnStroke>[];
         var affectedLayers = <DrawingLayer>{};
@@ -141,7 +152,7 @@ class WhiteboardSocket extends SocketBase {
             (a) => a is StrokeAction && affectedLayers.contains(a.layer));
 
         whiteboard.history.perform(
-            StrokeAcrossAction(false, toRemove, null)..userCreated = false,
+            StrokeAcrossAction(false, toRemove, const {})..userCreated = false,
             false);
         return true;
     }
@@ -154,5 +165,5 @@ Future<Uint8List> blobToBytes(Blob blob) async {
   var reader = FileReader();
   reader.readAsArrayBuffer(blob);
   await reader.onLoadEnd.first;
-  return reader.result;
+  return reader.result as Uint8List;
 }
