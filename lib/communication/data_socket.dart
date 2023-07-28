@@ -25,8 +25,6 @@ class WhiteboardDataSocket extends SocketBase {
     DrawingData getLayer() => whiteboard.layers[reader.readUInt8()];
     TextData getText() => whiteboard.texts[reader.readUInt8()];
 
-    print(data);
-
     switch (reader.readUInt8()) {
       case EventType.strokeCreate:
         var layer = getLayer();
